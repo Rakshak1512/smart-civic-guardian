@@ -1,0 +1,109 @@
+{% extends 'shared/base.html' %}
+{% block title %}Report an Issue - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<div class="card-panel form-panel">
+    <h1 class="page-title">Report a Civic Issue</h1>
+
+    <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1"><span>1</span>Issue Details</div>
+        <div class="wizard-step {{ 'active' if ai_result }}" data-step="2"><span>2</span>Location</div>
+        <div class="wizard-step {{ 'active' if ai_result }}" data-step="3"><span>3</span>AI Analysis</div>
+        <div class="wizard-step" data-step="4"><span>4</span>Review & Submit</div>
+    </div>
+
+    {% if not ai_result %}
+    <form method="POST" action="{{ url_for('issue.analyze_photo') }}" enctype="multipart/form-data" id="reportForm" novalidate>
+
+        <div class="wizard-panel" data-panel="1">
+            <div class="form-group">
+                <label for="photo">Upload Issue Photo <span class="required">*</span></label>
+                <input type="file" id="photo" name="photo" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp" required>
+                <img id="photoPreview" class="photo-preview" style="display:none;">
+            </div>
+            <div class="form-group">
+                <label for="category">Category <span class="required">*</span></label>
+                <select id="category" name="category" required>
+                    <option value="">-- Select Category --</option>
+                    <option value="Garbage" {% if form and form.category == 'Garbage' %}selected{% endif %}>Garbage</option>
+                    <option value="Water Leakage" {% if form and form.category == 'Water Leakage' %}selected{% endif %}>Water Leakage</option>
+                    <option value="Electricity Issue" {% if form and form.category == 'Electricity Issue' %}selected{% endif %}>Electricity Issue</option>
+                    <option value="Pothole" {% if form and form.category == 'Pothole' %}selected{% endif %}>Pothole</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="description">Description <span class="required">*</span></label>
+                <textarea id="description" name="description" rows="4" required minlength="10"
+                          placeholder="Describe the issue in detail (min 10 characters)...">{{ form.description if form else '' }}</textarea>
+            </div>
+            <div class="wizard-nav">
+                <span></span>
+                <button type="button" class="btn btn-primary wizard-next" data-next="2">Next: Location →</button>
+            </div>
+        </div>
+
+        <div class="wizard-panel" data-panel="2" style="display:none;">
+            <div class="form-group location-group">
+                <label>Location <span class="required">*</span></label>
+                <div id="gpsStatus" class="gps-status">Attempting to detect your location...</div>
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
+                <input type="hidden" id="location_name" name="location_name">
+
+                <div id="manualLocationBox" class="manual-location-box" style="display:none;">
+                    <label for="manual_location">GPS unavailable — enter your location manually</label>
+                    <input type="text" id="manual_location" name="manual_location" placeholder="e.g. MG Road, near City Hospital">
+                </div>
+                <button type="button" id="retryGpsBtn" class="btn btn-outline btn-small">Retry GPS Detection</button>
+            </div>
+            <div class="wizard-nav">
+                <button type="button" class="btn btn-outline wizard-back" data-back="1">← Back</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Analyze with AI →</button>
+            </div>
+        </div>
+    </form>
+
+        {% else %}
+    <div class="wizard-panel" data-panel="3">
+        <div class="ai-result-box">
+            <div class="ai-result-row"><span>Detected Category</span><strong>{{ ai_result.category }}</strong></div>
+            <div class="ai-result-row"><span>Suggested Priority</span><strong>{{ ai_result.priority }}</strong></div>
+            <div class="ai-result-row"><span>AI Confidence</span><strong>{{ (ai_result.confidence * 100) | round | int }}%</strong></div>
+        </div>
+
+        
+    <div class="wizard-nav">
+        <a href="{{ url_for('issue.report_issue') }}" class="btn btn-outline">← Start Over</a>
+           <button type="button" class="btn btn-primary wizard-next" data-next="4">Next: Review →</button>
+        </div>
+    </div>
+
+    <div class="wizard-panel" data-panel="4" style="display:none;">
+        <div class="review-box">
+            <div class="review-row"><span>Photo</span><img src="{{ url_for('static', filename=photo_path) }}" style="max-width:160px;border-radius:8px;"></div>
+            <div class="review-row"><span>Category</span><strong>{{ category }}</strong></div>
+            <div class="review-row"><span>Description</span><strong>{{ description }}</strong></div>
+            <div class="review-row"><span>Location</span><strong>{{ location_name }}</strong></div>
+            <div class="review-row"><span>Priority</span><strong>{{ ai_result.priority }}</strong></div>
+        </div>
+
+        <form method="POST" action="{{ url_for('issue.report_issue') }}" enctype="multipart/form-data">
+            <input type="hidden" name="category" value="{{ category }}">
+            <input type="hidden" name="description" value="{{ description }}">
+            <input type="hidden" name="latitude" value="{{ latitude }}">
+            <input type="hidden" name="longitude" value="{{ longitude }}">
+            <input type="hidden" name="location_name" value="{{ location_name }}">
+            <input type="hidden" name="manual_location" value="{{ manual_location }}">
+            <input type="hidden" name="analyzed_photo" value="{{ photo_filename }}">
+            <div class="wizard-nav">
+                <button type="button" class="btn btn-outline wizard-back" data-back="3">← Back</button>
+                <button type="submit" class="btn btn-primary">Submit Complaint</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/report_issue.js') }}"></script>{% endblock %}

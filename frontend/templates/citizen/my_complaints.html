@@ -1,0 +1,59 @@
+{% extends 'shared/base.html' %}
+{% block title %}My Complaints - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+{% set total = complaints|length %}
+{% set pending = complaints|selectattr('status', 'equalto', 'Pending')|list|length %}
+{% set inprogress = complaints|selectattr('status', 'equalto', 'In Progress')|list|length %}
+{% set resolved = complaints|selectattr('status', 'equalto', 'Resolved')|list|length %}
+
+<h1 class="page-title">My Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card stat-total"><span class="stat-number">{{ total }}</span><span class="stat-label">Total Complaints</span></div>
+    <div class="stat-card stat-pending"><span class="stat-number">{{ pending }}</span><span class="stat-label">Pending</span></div>
+    <div class="stat-card stat-progress"><span class="stat-number">{{ inprogress }}</span><span class="stat-label">In Progress</span></div>
+    <div class="stat-card stat-resolved"><span class="stat-number">{{ resolved }}</span><span class="stat-label">Resolved</span></div>
+</div>
+
+<div class="card-panel">
+    <div class="panel-header">
+        <h2>My Complaints</h2>
+        <a href="{{ url_for('issue.report_issue') }}" class="btn btn-primary btn-small">+ Report New Issue</a>
+    </div>
+
+    {% if complaints|length == 0 %}
+    <div class="empty-state">
+        <p>You haven't reported any issues yet.</p>
+        <a href="{{ url_for('issue.report_issue') }}" class="btn btn-primary">Report Your First Issue</a>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th><th>Category</th><th>Description</th><th>Location</th>
+                <th>Priority</th><th>Status</th><th>Reported On</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in complaints %}
+            <tr>
+                <td>#{{ c.id }}</td>
+                <td>{{ c.category }}</td>
+                <td class="truncate">{{ c.description }}</td>
+                <td>{{ c.location_name or 'N/A' }}</td>
+                <td><span class="badge badge-priority-{{ c.priority|lower }}">{{ c.priority }}</span></td>
+                <td><span class="badge badge-status-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span></td>
+                <td>{{ c.created_at|ist }}</td>
+                <td><a href="{{ url_for('issue.track_status', complaint_id=c.id) }}" class="btn btn-outline btn-small">Track</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

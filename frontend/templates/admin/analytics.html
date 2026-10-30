@@ -1,0 +1,43 @@
+{% extends 'shared/base.html' %}
+{% block title %}Analytics - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Analytics Dashboard</h1>
+
+<div id="analyticsSummary" class="stats-grid">
+    <div class="stat-card stat-total"><span class="stat-number" id="statTotal">--</span><span class="stat-label">Total Complaints</span></div>
+    <div class="stat-card stat-resolved"><span class="stat-number" id="statResolved">--</span><span class="stat-label">Resolved</span></div>
+    <div class="stat-card stat-high"><span class="stat-number" id="statHigh">--</span><span class="stat-label">High Priority</span></div>
+    <div class="stat-card stat-rating"><span class="stat-number" id="statRating">--</span><span class="stat-label">Avg. Citizen Rating</span></div>
+</div>
+
+<div class="analytics-grid">
+    <div class="card-panel chart-card">
+        <h3>Complaints by Category</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+    <div class="card-panel chart-card">
+        <h3>Pending vs In Progress vs Resolved</h3>
+        <canvas id="statusChart"></canvas>
+    </div>
+    <div class="card-panel chart-card">
+        <h3>Complaints by Priority</h3>
+        <canvas id="priorityChart"></canvas>
+    </div>
+    <div class="card-panel chart-card">
+        <h3>Complaint Trend (Last 14 Days)</h3>
+        <canvas id="trendChart"></canvas>
+    </div>
+</div>
+
+<div class="card-panel">
+    <h3>Most Frequently Reported Locations</h3>
+    <ul id="hotspotList" class="hotspot-list"></ul>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

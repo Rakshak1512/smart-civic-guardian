@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Smart Civic Guardian</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+
+<div class="auth-wrapper">
+    <div class="auth-brand">
+        <span class="brand-icon-big">🛡</span>
+        <h1>Smart Civic Guardian</h1>
+        <p>Administrator Access</p>
+    </div>
+
+    <div class="auth-card">
+        <h2>Admin Login</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.admin_login') }}" id="admin-login-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="admin@test.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Login as Admin</button>
+        </form>
+
+        <div style="margin-top: 20px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+            <p style="margin: 0 0 8px; font-size: 12px; color: #64748b; font-weight: 600;">DEMO ADMIN ACCOUNT</p>
+            <div style="font-size: 13px; font-weight: 600; color: #1e293b;">admin@test.com / Admin@123</div>
+            <button type="button" class="btn btn-outline" style="margin-top: 8px; font-size: 12px; padding: 4px 10px;" onclick="document.getElementById('email').value='admin@test.com'; document.getElementById('password').value='Admin@123';">
+                Use Demo Admin Account
+            </button>
+        </div>
+
+        <p class="auth-switch" style="margin-top: 16px;">
+            <a href="{{ url_for('auth.login') }}">Go to Citizen / Authority Login</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

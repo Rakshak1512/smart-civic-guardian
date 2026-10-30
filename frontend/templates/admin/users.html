@@ -1,0 +1,44 @@
+{% extends 'shared/base.html' %}
+{% block title %}Users - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Users</h1>
+
+<div class="card-panel">
+    <div class="panel-header"><h2>Citizens</h2></div>
+    {% if citizens|length == 0 %}
+    <div class="empty-state"><p>No citizens registered yet.</p></div>
+    {% else %}
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+        <tbody>
+        {% for c in citizens %}
+            <tr><td>{{ c.name }}</td><td>{{ c.email }}</td><td>{{ c.phone or 'N/A' }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card-panel">
+    <div class="panel-header"><h2>Authorities</h2></div>
+    {% if authorities|length == 0 %}
+    <div class="empty-state"><p>No authority accounts yet.</p></div>
+    {% else %}
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Designation</th></tr></thead>
+        <tbody>
+        {% for a in authorities %}
+            <tr><td>{{ a.name }}</td><td>{{ a.email }}</td><td>{{ a.department }}</td><td>{{ a.designation }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

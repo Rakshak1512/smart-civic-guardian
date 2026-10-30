@@ -1,0 +1,123 @@
+{% extends 'shared/base.html' %}
+{% block title %}Admin Panel - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Admin Panel</h1>
+<p class="page-subtitle"><a href="{{ url_for('admin.view_messages') }}">View Contact Messages →</a></p>
+
+<div class="stats-grid stats-grid-6">
+    <div class="stat-card stat-total"><span class="stat-number">{{ stats.total }}</span><span class="stat-label">Total Complaints</span></div>
+    <div class="stat-card stat-pending"><span class="stat-number">{{ stats.pending }}</span><span class="stat-label">Pending</span></div>
+    <div class="stat-card stat-progress"><span class="stat-number">{{ stats.in_progress }}</span><span class="stat-label">In Progress</span></div>
+    <div class="stat-card stat-resolved"><span class="stat-number">{{ stats.resolved }}</span><span class="stat-label">Resolved</span></div>
+    <div class="stat-card stat-high"><span class="stat-number">{{ stats.high_priority }}</span><span class="stat-label">High Priority</span></div>
+    <div class="stat-card stat-notif"><span class="stat-number">{{ unread_count }}</span><span class="stat-label">New Notifications</span></div>
+</div>
+
+<div class="stats-grid stats-grid-3">
+    <div class="stat-card"><span class="stat-number">{{ citizens|length }}</span><span class="stat-label">Total Citizens</span></div>
+    <div class="stat-card"><span class="stat-number">{{ authorities|length }}</span><span class="stat-label">Total Authorities</span></div>
+    <div class="stat-card"><span class="stat-number">{{ complaints|length }}</span><span class="stat-label">Complaint Records</span></div>
+</div>
+
+<div class="card-panel">
+    <div class="panel-header"><h2>Authority Accounts</h2></div>
+
+    <details class="add-authority">
+        <summary class="btn btn-primary btn-small">+ Add Authority</summary>
+        <form method="POST" action="{{ url_for('admin.add_authority') }}" class="add-authority-form">
+            <div class="form-group">
+                <label for="a_name">Name</label>
+                <input type="text" id="a_name" name="name" required placeholder="Full name">
+            </div>
+            <div class="form-group">
+                <label for="a_email">Email</label>
+                <input type="email" id="a_email" name="email" required placeholder="officer@example.com">
+            </div>
+            <div class="form-group">
+                <label for="a_password">Password</label>
+                <input type="password" id="a_password" name="password" required minlength="6" placeholder="At least 6 characters">
+            </div>
+            <div class="form-group">
+                <label for="a_department">Department</label>
+                <select id="a_department" name="department" required>
+                    <option value="">-- Select Department --</option>
+                    <option value="Garbage">Garbage</option>
+                    <option value="Water Leakage">Water Leakage</option>
+                    <option value="Electricity Issue">Electricity Issue</option>
+                    <option value="Pothole">Pothole</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="a_designation">Designation (optional)</label>
+                <input type="text" id="a_designation" name="designation" placeholder="e.g. Junior Engineer">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Authority</button>
+        </form>
+    </details>
+
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Designation</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for a in authorities %}
+        <tr>
+            <td>{{ a.name }}</td>
+            <td>{{ a.email }}</td>
+            <td>{{ a.department }}</td>
+            <td>{{ a.designation }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin.remove_authority', user_id=a.id) }}"
+                      onsubmit="return confirm('Remove this authority? Their assigned complaints will become unassigned.');">
+                    <button type="submit" class="btn btn-outline btn-small">Remove</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No authorities yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="card-panel">
+    <div class="panel-header"><h2>All Complaints</h2></div>
+    <div class="table-responsive">
+        <table class="data-table">
+        <thead><tr><th>ID</th><th>Citizen</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Reported On</th><th>Resolved On</th><th></th></tr></thead>
+        <tbody>
+        {% for c in complaints %}
+        <tr>
+            <td>#{{ c.id }}</td>
+            <td>{{ c.citizen_name }}<br><small class="hint-text">{{ c.citizen_email }}</small></td>
+            <td>{{ c.category }}</td>
+            <td><span class="badge badge-priority-{{ c.priority|lower }}">{{ c.priority }}</span></td>
+            <td><span class="badge badge-status-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span></td>
+            <td>{{ c.assigned_name or 'Not assigned' }}</td>
+            <td>{{ c.created_at|ist }}</td>
+            <td>{{ (c.resolved_at|ist) if c.resolved_at else '-' }}</td>
+            <td><a href="{{ url_for('admin.complaint_detail', complaint_id=c.id) }}" class="btn btn-outline btn-small">View</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="card-panel">
+    <div class="panel-header"><h2>Citizen Accounts</h2></div>
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th></tr></thead>
+        <tbody>
+        {% for c in citizens %}
+        <tr><td>{{ c.name }}</td><td>{{ c.email }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}

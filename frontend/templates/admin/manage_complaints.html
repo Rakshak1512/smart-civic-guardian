@@ -1,0 +1,65 @@
+{% extends 'shared/base.html' %}
+{% block title %}Manage Complaints - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Manage Complaints</h1>
+
+<div class="card-panel">
+    <form method="GET" action="{{ url_for('admin.manage_complaints') }}" class="filter-bar">
+        <input type="text" name="search" placeholder="Search description or location..." value="{{ filters.search }}">
+
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for cat in ['Garbage', 'Water Leakage', 'Electricity Issue', 'Pothole'] %}
+            <option value="{{ cat }}" {% if filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="status">
+            <option value="">All Statuses</option>
+            {% for st in ['Pending', 'In Progress', 'Resolved'] %}
+            <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="priority">
+            <option value="">All Priorities</option>
+            {% for p in ['Low', 'Medium', 'High'] %}
+            <option value="{{ p }}" {% if filters.priority == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary btn-small">Filter</button>
+        <a href="{{ url_for('admin.manage_complaints') }}" class="btn btn-outline btn-small">Clear</a>
+    </form>
+
+    {% if complaints|length == 0 %}
+    <div class="empty-state"><p>No complaints match your filters.</p></div>
+    {% else %}
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead><tr><th>ID</th><th>Citizen</th><th>Category</th><th>Priority</th><th>Status</th><th>Location</th><th>Reported On</th><th></th></tr></thead>
+        <tbody>
+        {% for c in complaints %}
+            <tr>
+                <td>
+                    #{{ c.id }}
+                    {% if c.duplicate_of %}<span class="badge badge-priority-medium" title="Duplicate of #{{ c.duplicate_of }}">DUP</span>{% endif %}
+                </td>
+                <td>{{ c.citizen_name }}</td>
+                <td>{{ c.category }}</td>
+                <td><span class="badge badge-priority-{{ c.priority|lower }}">{{ c.priority }}</span></td>
+                <td><span class="badge badge-status-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span></td>
+                <td>{{ c.location_name or 'N/A' }}</td>
+                <td>{{ c.created_at|ist }}</td>
+                <td><a href="{{ url_for('admin.complaint_detail', complaint_id=c.id) }}" class="btn btn-outline btn-small">Manage</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% macro icon(name) -%}
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == 'dashboard' -%}
+<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+{%- elif name == 'report' -%}
+<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 12v6"/>
+{%- elif name == 'list' -%}
+<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+{%- elif name == 'map' -%}
+<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+{%- elif name == 'bell' -%}
+<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+{%- elif name == 'chart' -%}
+<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+{%- elif name == 'users' -%}
+<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+{%- elif name == 'logout' -%}
+<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+{%- elif name == 'mail' -%}
+<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+{%- elif name == 'star' -%}
+<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% set ep = request.endpoint %}
+{% set role = session.get('role') %}
+
+<aside class="sidebar">
+    <a class="sidebar-brand" href="{{ url_for('auth.dashboard_redirect') }}">
+        <span class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>Smart Civic<br>Guardian</span>
+    </a>
+
+    <nav class="sidebar-nav">
+        {% if role == 'citizen' %}
+            <a href="{{ url_for('auth.dashboard_redirect') }}" class="{{ 'active' if ep == 'issue.my_complaints' }}">{{ icon('dashboard') }} Dashboard</a>
+            <a href="{{ url_for('issue.report_issue') }}" class="{{ 'active' if ep == 'issue.report_issue' }}">{{ icon('report') }} Report Issue</a>
+            <a href="{{ url_for('issue.civic_map') }}" class="{{ 'active' if ep == 'issue.civic_map' }}">{{ icon('map') }} Civic Map</a>
+            <a href="{{ url_for('auth.profile') }}" class="{{ 'active' if ep == 'auth.profile' }}">{{ icon('users') }} My Profile</a>
+            <a href="{{ url_for('issue.my_feedback') }}" class="{{ 'active' if ep == 'issue.my_feedback' }}">{{ icon('star') }} My Feedback</a>
+        {% elif role == 'authority' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if ep == 'admin.dashboard' }}">{{ icon('dashboard') }} Dashboard</a>
+            <a href="{{ url_for('admin.manage_complaints') }}" class="{{ 'active' if ep in ('admin.manage_complaints', 'admin.complaint_detail') }}">{{ icon('list') }} Complaints</a>
+            <a href="{{ url_for('admin.complaints_map') }}" class="{{ 'active' if ep == 'admin.complaints_map' }}">{{ icon('map') }} Map</a>
+            <a href="{{ url_for('analytics.analytics_page') }}" class="{{ 'active' if ep == 'analytics.analytics_page' }}">{{ icon('chart') }} Analytics</a>
+            <a href="{{ url_for('admin.feedback_list') }}" class="{{ 'active' if ep == 'admin.feedback_list' }}">{{ icon('star') }} Feedback</a>
+        {% elif role == 'admin' %}
+            <a href="{{ url_for('admin.admin_panel') }}" class="{{ 'active' if ep == 'admin.admin_panel' }}">{{ icon('users') }} Admin Panel</a>
+            <a href="{{ url_for('admin.departments') }}" class="{{ 'active' if ep == 'admin.departments' }}">{{ icon('users') }} Departments</a>
+            <a href="{{ url_for('admin.users') }}" class="{{ 'active' if ep == 'admin.users' }}">{{ icon('users') }} Users</a>
+            <a href="{{ url_for('admin.feedback_list') }}" class="{{ 'active' if ep == 'admin.feedback_list' }}">{{ icon('star') }} Feedback</a>
+            <a href="{{ url_for('admin.view_messages') }}" class="{{ 'active' if ep == 'admin.view_messages' }}">{{ icon('mail') }} Messages</a>
+        {% endif %}
+        <a href="{{ url_for('issue.notifications') }}" class="{{ 'active' if ep == 'issue.notifications' }}">
+            {{ icon('bell') }} Notifications
+            {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+        </a>
+    </nav>
+
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-logout">{{ icon('logout') }} Logout</a>
+</aside>

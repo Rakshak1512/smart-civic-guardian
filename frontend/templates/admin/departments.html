@@ -1,0 +1,35 @@
+{% extends 'shared/base.html' %}
+{% block title %}Departments - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Departments</h1>
+<p class="page-subtitle">Overview of each civic department and its officers.</p>
+
+<div class="dept-grid">
+{% for d in departments %}
+    <div class="dept-card">
+        <div class="dept-card-header">
+            <h2>{{ d.category }}</h2>
+            <span class="hint-text">{{ d.authority_name }}</span>
+        </div>
+        <div class="dept-stats-row">
+            <div><span class="stat-number">{{ d.stats.total }}</span><br><span class="stat-label">Total</span></div>
+            <div><span class="stat-number">{{ d.stats.pending }}</span><br><span class="stat-label">Pending</span></div>
+            <div><span class="stat-number">{{ d.stats.resolved }}</span><br><span class="stat-label">Resolved</span></div>
+        </div>
+        <p class="section-label">Officers</p>
+        {% if d.officers|length == 0 %}
+        <p class="hint-text">No officers assigned yet.</p>
+        {% else %}
+        <ul class="officer-list">
+            {% for o in d.officers %}
+            <li>{{ o.name }} — <span class="hint-text">{{ o.designation }}</span></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}

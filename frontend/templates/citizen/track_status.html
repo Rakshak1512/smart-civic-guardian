@@ -1,0 +1,83 @@
+{% extends 'shared/base.html' %}
+{% block title %}Track Complaint #{{ complaint.id }} - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<div class="card-panel">
+    <div class="panel-header">
+        <h1 class="page-title">Complaint #{{ complaint.id }}</h1>
+        <span class="badge badge-status-{{ complaint.status|lower|replace(' ', '-') }} badge-large">{{ complaint.status }}</span>
+    </div>
+
+    <div class="tracker">
+        <div class="tracker-step {% if complaint.status in ['Pending', 'In Progress', 'Resolved'] %}active{% endif %}">
+            <span class="tracker-dot"></span><span>Pending</span>
+        </div>
+        <div class="tracker-step {% if complaint.status in ['In Progress', 'Resolved'] %}active{% endif %}">
+            <span class="tracker-dot"></span><span>In Progress</span>
+        </div>
+        <div class="tracker-step {% if complaint.status == 'Resolved' %}active{% endif %}">
+            <span class="tracker-dot"></span><span>Resolved</span>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-photo-block">
+            <h3>Original Photo</h3>
+            {% if complaint.photo_path %}
+            <img src="{{ url_for('static', filename=complaint.photo_path) }}" class="detail-photo" alt="Issue photo">
+            {% else %}
+            <div class="empty-state small">No photo uploaded</div>
+            {% endif %}
+        </div>
+
+        <div class="detail-info-block">
+            <p><strong>Category:</strong> {{ complaint.category }}</p>
+            <p><strong>AI Detected Category:</strong> {{ complaint.ai_detected_category or 'N/A' }}
+               {% if complaint.ai_confidence %} ({{ (complaint.ai_confidence * 100)|round|int }}% confidence){% endif %}</p>
+            <p><strong>Priority:</strong> <span class="badge badge-priority-{{ complaint.priority|lower }}">{{ complaint.priority }}</span></p>
+            <p><strong>Description:</strong> {{ complaint.description }}</p>
+            <p><strong>Location:</strong> {{ complaint.location_name or 'N/A' }}</p>
+            <p><strong>Reported On:</strong> {{ complaint.created_at|ist }}</p>
+            {% if complaint.assignee_name %}<p><strong>Assigned To:</strong> {{ complaint.assignee_name }}</p>{% endif %}
+            {% if complaint.resolution_notes %}<p><strong>Resolution Notes:</strong> {{ complaint.resolution_notes }}</p>{% endif %}
+        </div>
+    </div>
+
+    {% if complaint.resolved_photo_path %}
+    <div class="detail-photo-block">
+        <h3>Resolved Photo (Proof)</h3>
+        <img src="{{ url_for('static', filename=complaint.resolved_photo_path) }}" class="detail-photo" alt="Resolved photo">
+    </div>
+    {% endif %}
+
+    {% if complaint.status == 'Resolved' %}
+        <div class="feedback-section">
+            <h3>Your Feedback</h3>
+            {% if feedback %}
+                <p>You rated this resolution <strong>{{ feedback.rating }}/5</strong>.</p>
+                {% if feedback.comment %}<p>"{{ feedback.comment }}"</p>{% endif %}
+            {% else %}
+                <form method="POST" action="{{ url_for('issue.submit_feedback', complaint_id=complaint.id) }}">
+                    <div class="form-group">
+                        <label for="rating">Rating (1-5)</label>
+                        <select name="rating" id="rating" required>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Comment (optional)</label>
+                        <textarea name="comment" id="comment" rows="3" placeholder="Tell us about your experience..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

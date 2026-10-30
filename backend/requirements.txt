@@ -1,0 +1,7 @@
+Flask==3.0.3
+Flask-Cors==6.0.5
+Flask-Mail==0.10.0
+gunicorn==26.2.0
+python-dotenv==1.0.1
+Werkzeug==3.0.3
+Pillow==10.4.0

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Smart Civic Guardian{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% set logged_in = session.get('user_id') %}
+
+{% if logged_in %}
+<div class="app-shell">
+    {% include 'shared/navbar.html' %}
+    <div class="app-main">
+        <header class="topbar">
+            <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">☰</button>
+            <span class="topbar-title">{% block topbar_title %}Welcome, {{ current_name }}{% endblock %}</span>
+            <div class="topbar-actions">
+                {% if session.get('role') == 'authority' and session.get('department') %}
+                <span class="dept-chip">{{ session.get('department') }}</span>
+                {% endif %}
+                <a href="{{ url_for('issue.notifications') }}" class="topbar-bell" aria-label="Notifications">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    {% if unread_count %}<span class="badge-dot">{{ unread_count }}</span>{% endif %}
+                </a>
+                <span class="avatar">{{ (current_name or 'U')[:1]|upper }}</span>
+            </div>
+        </header>
+{% endif %}
+
+        <main class="{{ 'app-content' if logged_in else 'page-container no-nav' }}">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+{% if logged_in %}
+    </div>
+</div>
+{% endif %}
+
+{% include 'shared/footer.html' %}
+
+<script>
+    window.BACKEND_URL = "{{ BACKEND_URL|default('http://localhost:5000') }}";
+    window.FRONTEND_URL = "{{ FRONTEND_URL|default('http://localhost:3000') }}";
+    window.API_BASE_URL = window.BACKEND_URL;
+</script>
+<script src="{{ url_for('static', filename='js/config.js') }}"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+setTimeout(function () {
+    document.querySelectorAll('.alert').forEach(function (el) { el.remove(); });
+}, 6000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

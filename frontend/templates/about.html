@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About - Smart Civic Guardian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+</head>
+<body class="home-body">
+
+<nav class="public-nav">
+    <a href="{{ url_for('auth.home') }}" class="public-nav-brand" style="text-decoration: none; color: inherit;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg>
+        Smart Civic Guardian
+    </a>
+    <div class="public-nav-links">
+        <a href="{{ url_for('auth.home') }}">Home</a>
+        <a href="{{ url_for('auth.about') }}">About</a>
+        <a href="{{ url_for('auth.contact') }}">Contact</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-small">Login</a>
+    </div>
+</nav>
+
+<section class="about-hero">
+    <div class="about-hero-content">
+        <span class="hero-tag">About Smart Civic Guardian</span>
+        <h1>Technology for cleaner, safer and smarter communities.</h1>
+    </div>
+</section>
+
+<section class="mission-vision">
+    <div class="mv-card">
+        <span class="mv-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+        <h3>Our Mission</h3>
+        <p>To make civic issue reporting easier, faster and more transparent through technology.</p>
+    </div>
+    <div class="mv-card">
+        <span class="mv-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <h3>Our Vision</h3>
+        <p>A connected community where citizens can report problems and authorities can respond efficiently.</p>
+    </div>
+</section>
+
+<section class="about-project">
+    <p class="about-intro">
+        Smart Civic Guardian is a technology-driven civic issue management platform designed to
+        connect citizens with authorities through a simple digital reporting system.
+    </p>
+    <div class="about-flow">
+        <div class="flow-item">
+            <span class="flow-num">1</span>
+            <p>Citizens can report civic issues using photographs.</p>
+        </div>
+        <div class="flow-item">
+            <span class="flow-num">2</span>
+            <p>AI helps identify the issue category.</p>
+        </div>
+        <div class="flow-item">
+            <span class="flow-num">3</span>
+            <p>The system suggests priority.</p>
+        </div>
+        <div class="flow-item">
+            <span class="flow-num">4</span>
+            <p>Complaints are routed to the appropriate department.</p>
+        </div>
+        <div class="flow-item">
+            <span class="flow-num">5</span>
+            <p>Authorities can manage and update complaints.</p>
+        </div>
+        <div class="flow-item">
+            <span class="flow-num">6</span>
+            <p>Citizens can track progress until resolution.</p>
+        </div>
+    </div>
+</section>
+
+<section class="why-section">
+    <h2 class="section-title">Why Smart Civic Guardian?</h2>
+    <div class="why-grid">
+        <div class="why-card">
+            <span class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+            <strong>Real-Time Tracking</strong>
+            <p>Follow your complaint from submission to resolution, at every stage.</p>
+        </div>
+        <div class="why-card">
+            <span class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></svg></span>
+            <strong>AI-Assisted Accuracy</strong>
+            <p>Smart categorization and priority detection reduce delays and misrouted reports.</p>
+        </div>
+        <div class="why-card">
+            <span class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></span>
+            <strong>Direct Accountability</strong>
+            <p>Every report reaches the right department, with no lost paperwork or runaround.</p>
+        </div>
+        <div class="why-card">
+            <span class="why-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg></span>
+            <strong>Public Accountability</strong>
+            <p>Dashboards give citizens and authorities a transparent, shared view of progress.</p>
+        </div>
+    </div>
+</section>
+
+<footer class="public-footer">
+    <p>Smart Civic Guardian · Cleaner Cities · Safer Communities · Brighter Future</p>
+</footer>
+
+</body>
+</html>

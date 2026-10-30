@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Civic Guardian - Report. Track. Resolve.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body class="home-body">
+
+<nav class="public-nav">
+    <a href="{{ url_for('auth.home') }}" class="public-nav-brand" style="text-decoration: none; color: inherit;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg>
+        Smart Civic Guardian
+    </a>
+    <div class="public-nav-links">
+        <a href="{{ url_for('auth.home') }}">Home</a>
+        <a href="{{ url_for('auth.about') }}">About</a>
+        <a href="{{ url_for('auth.contact') }}">Contact</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-small">Login</a>
+    </div>
+</nav>
+
+<section class="hero" id="home">
+    <svg class="hero-bg-svg" viewBox="0 0 1200 300" preserveAspectRatio="none" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; opacity: 0.15; pointer-events: none;">
+        <rect x="0" y="150" width="60" height="150" fill="#0B3838"/>
+        <rect x="70" y="100" width="50" height="200" fill="#0F4C4C"/>
+        <rect x="130" y="180" width="70" height="120" fill="#0B3838"/>
+        <rect x="210" y="60" width="55" height="240" fill="#0F4C4C"/>
+        <rect x="275" y="130" width="45" height="170" fill="#0B3838"/>
+        <rect x="330" y="90" width="60" height="210" fill="#0F4C4C"/>
+        <rect x="1000" y="110" width="55" height="190" fill="#0F4C4C"/>
+        <rect x="1065" y="170" width="60" height="130" fill="#0B3838"/>
+        <rect x="1135" y="70" width="50" height="230" fill="#0F4C4C"/>
+    </svg>
+    
+    <div class="hero-content">
+        <span class="hero-tag">Civic Tech · Sustainable Smart Cities</span>
+        <h1>Smart Civic Guardian</h1>
+        <p class="hero-tagline">Report. Track. Resolve.</p>
+        <p class="hero-desc">A simple, transparent and automated civic engagement platform empowering citizens and municipal authorities to build better communities.</p>
+        <div class="hero-actions" style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600;">Report an Issue →</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline" style="padding: 12px 24px; font-weight: 600; border: 2px solid #ffffff; color: #ffffff; text-decoration: none; border-radius: 6px;">Create Account</a>
+        </div>
+    </div>
+</section>
+
+<section class="categories-section">
+    <h2 class="section-title">What You Can Report</h2>
+    <div class="category-grid">
+        <div class="category-card">
+            <span class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
+            <strong>Garbage</strong>
+            <p>Routed to Sanitation Department</p>
+        </div>
+        <div class="category-card">
+            <span class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21a7 7 0 0 0 7-7c0-4-7-12-7-12S5 10 5 14a7 7 0 0 0 7 7z"/></svg></span>
+            <strong>Water Leakage</strong>
+            <p>Routed to Water Department</p>
+        </div>
+        <div class="category-card">
+            <span class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 11 14 10 22 21 10 13 10 13 2"/></svg></span>
+            <strong>Electricity Issue</strong>
+            <p>Routed to Electricity Department</p>
+        </div>
+        <div class="category-card">
+            <span class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="17" rx="8" ry="3"/><path d="M4 17V9a8 3 0 0 1 16 0v8"/></svg></span>
+            <strong>Pothole</strong>
+            <p>Routed to Road Department</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-row">
+        <div class="step-card"><span class="step-num">1</span><strong>Report</strong><p>Upload a photo with geo-location and describe the issue.</p></div>
+        <div class="step-card"><span class="step-num">2</span><strong>AI Analysis</strong><p>The system classifies the category and calculates priority.</p></div>
+        <div class="step-card"><span class="step-num">3</span><strong>Routed</strong><p>Sent to the responsible municipal department automatically.</p></div>
+        <div class="step-card"><span class="step-num">4</span><strong>Resolved</strong><p>Track progress with live status updates until it's resolved.</p></div>
+    </div>
+</section>
+
+<footer class="public-footer" style="padding: 30px 20px; text-align: center; background: #0f172a; color: #94a3b8;">
+    <div style="margin-bottom: 12px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('auth.home') }}" style="color: #cbd5e1; text-decoration: none;">Home</a>
+        <a href="{{ url_for('auth.about') }}" style="color: #cbd5e1; text-decoration: none;">About</a>
+        <a href="{{ url_for('auth.contact') }}" style="color: #cbd5e1; text-decoration: none;">Contact</a>
+        <a href="{{ url_for('auth.login') }}" style="color: #cbd5e1; text-decoration: none;">Login</a>
+        <a href="{{ url_for('auth.register') }}" style="color: #cbd5e1; text-decoration: none;">Register</a>
+    </div>
+    <p style="margin: 0; font-size: 13px;">Smart Civic Guardian · Cleaner Cities · Safer Communities · Brighter Future</p>
+</footer>
+
+</body>
+</html>

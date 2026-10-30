@@ -1,0 +1,88 @@
+{
+  "photos_per_class": {
+    "Garbage": 86,
+    "Pothole": 26,
+    "Water_Leakage": 20,
+    "Electricity_Issue": 20
+  },
+  "training_views": 3748,
+  "C": 0.3,
+  "heldout_accuracy": 0.9539473684210527,
+  "macro_f1": 0.9263222409774134,
+  "confusion_matrix": [
+    [
+      86,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      25,
+      1,
+      0
+    ],
+    [
+      1,
+      4,
+      15,
+      0
+    ],
+    [
+      1,
+      0,
+      0,
+      19
+    ]
+  ],
+  "class_order": [
+    "Garbage",
+    "Pothole",
+    "Water Leakage",
+    "Electricity Issue"
+  ],
+  "mistakes": [
+    [
+      "new_pothole_13.jpg",
+      "Pothole",
+      "Water_Leakage",
+      0.5044333934783936
+    ],
+    [
+      "new_water_leakage_05.jpg",
+      "Water_Leakage",
+      "Pothole",
+      0.6356117129325867
+    ],
+    [
+      "new_water_leakage_07.jpg",
+      "Water_Leakage",
+      "Pothole",
+      0.6371484994888306
+    ],
+    [
+      "new_water_leakage_08.jpg",
+      "Water_Leakage",
+      "Pothole",
+      0.5599563717842102
+    ],
+    [
+      "water_leakage_02.jpg",
+      "Water_Leakage",
+      "Garbage",
+      0.43638479709625244
+    ],
+    [
+      "water_leakage_09.jpg",
+      "Water_Leakage",
+      "Pothole",
+      0.3414100706577301
+    ],
+    [
+      "electricity_issue_11.jpg",
+      "Electricity_Issue",
+      "Garbage",
+      0.4595511555671692
+    ]
+  ]
+}

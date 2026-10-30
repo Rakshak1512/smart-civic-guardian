@@ -1,0 +1,33 @@
+{% extends 'shared/base.html' %}
+{% block title %}Complaints Map - Smart Civic Guardian{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Complaints Map</h1>
+<div class="card-panel">
+    <div id="complaintsMap" class="full-map"></div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+window.COMPLAINTS_DATA = [
+    {% for c in complaints %}
+    {
+        id: {{ c.id }},
+        category: {{ c.category|tojson }},
+        priority: {{ c.priority|tojson }},
+        status: {{ c.status|tojson }},
+        latitude: {{ c.latitude }},
+        longitude: {{ c.longitude }},
+        location_name: {{ (c.location_name or '')|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

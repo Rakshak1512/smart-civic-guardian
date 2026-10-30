@@ -1,0 +1,4 @@
+numpy
+pillow
+# only needed if you re-train with train.py:
+scikit-learn

@@ -1,0 +1,22 @@
+{% extends 'shared/base.html' %}
+{% block title %}Notifications - Smart Civic Guardian{% endblock %}
+{% block content %}
+<div class="card-panel">
+    <h1 class="page-title">🔔 Notifications</h1>
+
+    {% if notifications|length == 0 %}
+    <div class="empty-state">
+        <p>You have no notifications yet.</p>
+    </div>
+    {% else %}
+    <ul class="notification-list">
+        {% for n in notifications %}
+        <li class="notification-item {% if not n.is_read %}unread{% endif %}">
+            <span class="notification-message">{{ n.message }}</span>
+            <span class="notification-time">{{ n.created_at|ist}}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'shared/base.html' %}
+{% block title %}Contact Messages - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Contact Messages</h1>
+<p class="page-subtitle">Messages submitted through the Contact page.</p>
+
+{% if not messages %}
+<div class="card-panel">
+    <div class="empty-state">No messages yet.</div>
+</div>
+{% endif %}
+
+{% for m in messages %}
+<div class="card-panel">
+    <div class="panel-header">
+        <h2>{{ m.name }} <span class="hint-text">&lt;{{ m.email }}&gt;</span></h2>
+        <span class="hint-text">{{ m.submitted_at }}</span>
+    </div>
+    {% if m.department %}
+    <p><span class="badge badge-priority-medium">{{ m.department }}</span></p>
+    {% endif %}
+    <p>{{ m.message }}</p>
+
+    {% if m.reply_text %}
+    <div class="alert alert-success">
+        <strong>Replied:</strong> {{ m.reply_text }}
+    </div>
+    {% else %}
+    <form method="POST" action="{{ url_for('admin.reply_message', message_id=m.id) }}">
+        <div class="form-group">
+            <label for="reply_{{ m.id }}">Reply</label>
+            <textarea id="reply_{{ m.id }}" name="reply_text" rows="3" required placeholder="Type your reply..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-small">Send Reply</button>
+    </form>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% endblock %}

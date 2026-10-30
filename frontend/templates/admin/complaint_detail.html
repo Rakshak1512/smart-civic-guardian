@@ -1,0 +1,132 @@
+{% extends 'shared/base.html' %}
+{% block title %}Complaint #{{ complaint.id }} - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<div class="card-panel">
+    <div class="panel-header">
+        <h1 class="page-title">Complaint #{{ complaint.id }}</h1>
+        <span class="badge badge-status-{{ complaint.status|lower|replace(' ', '-') }} badge-large">{{ complaint.status }}</span>
+    </div>
+
+    {% if complaint.duplicate_of %}
+    <div class="alert alert-error" style="margin-bottom:1.2rem;">
+        <strong>Duplicate report</strong> — this matches an existing complaint
+        <a href="{{ url_for('admin.complaint_detail', complaint_id=complaint.duplicate_of) }}">#{{ complaint.duplicate_of }}</a>.
+        {{ complaint.support_count }} citizen(s) have now reported this same issue.
+    </div>
+    {% endif %}
+
+    <div class="detail-grid">
+        <div class="detail-photo-block">
+            <h3>Original Photo</h3>
+            {% if complaint.photo_path %}
+            <img src="{{ url_for('static', filename=complaint.photo_path) }}" class="detail-photo" alt="Issue photo">
+            {% else %}
+            <div class="empty-state small">No photo uploaded</div>
+            {% endif %}
+        </div>
+
+        <div class="detail-info-block">
+            <p><strong>Citizen:</strong> {{ complaint.citizen_name }} ({{ complaint.citizen_email }}, {{ complaint.citizen_phone or 'N/A' }})</p>
+            <p><strong>Category:</strong> {{ complaint.category }}</p>
+            <p><strong>AI Detected Category:</strong> {{ complaint.ai_detected_category or 'N/A' }}
+               {% if complaint.ai_confidence %} ({{ (complaint.ai_confidence * 100)|round|int }}% confidence){% endif %}</p>
+            <p><strong>Priority:</strong> <span class="badge badge-priority-{{ complaint.priority|lower }}">{{ complaint.priority }}</span></p>
+            <p><strong>Description:</strong> {{ complaint.description }}</p>
+            <p><strong>Location:</strong> {{ complaint.location_name or 'N/A' }}
+               {% if complaint.latitude and complaint.longitude %} ({{ complaint.latitude }}, {{ complaint.longitude }}){% endif %}</p>
+            <p><strong>Reported On:</strong> {{ complaint.created_at|ist }}</p>
+            <p><strong>Support Count:</strong> {{ complaint.support_count }}{% if complaint.support_count and complaint.support_count > 1 %} citizen reports linked to this issue{% endif %}</p>
+        </div>
+    </div>
+
+    {% if complaint.latitude and complaint.longitude %}
+    <div id="miniMap" class="mini-map"></div>
+    {% endif %}
+
+    {% if session.get('role') == 'authority' %}
+    <div class="management-forms">
+        <div class="form-block">
+            <h3>Assign Complaint</h3>
+            <form method="POST" action="{{ url_for('admin.assign_complaint', complaint_id=complaint.id) }}">
+                <div class="form-group">
+                    <select name="assigned_to" required>
+                        <option value="">-- Select Authority --</option>
+                        {% for a in authorities %}
+                        <option value="{{ a.id }}" {% if complaint.assigned_to == a.id %}selected{% endif %}>
+                            {{ a.name }} ({{ a.department }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary">Assign</button>
+            </form>
+        </div>
+
+        <div class="form-block">
+            <h3>Update Status</h3>
+            <form method="POST" action="{{ url_for('admin.update_status', complaint_id=complaint.id) }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select name="status" id="statusSelect" required onchange="toggleResolvedFields(this.value)">
+                        <option value="Pending" {% if complaint.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="In Progress" {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Resolved" {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="resolution_notes">Resolution Notes</label>
+                    <textarea name="resolution_notes" id="resolution_notes" rows="3"
+                              placeholder="Describe the action taken...">{{ complaint.resolution_notes or '' }}</textarea>
+                </div>
+                <div class="form-group {{ 'hidden-field' if complaint.status != 'Resolved' }}" id="resolvedPhotoGroup">
+                    <label for="resolved_photo">Resolved Photo (proof) <span class="required">*</span></label>
+                    <input type="file" id="resolved_photo" name="resolved_photo" accept="image/*">
+                    {% if complaint.resolved_photo_path %}
+                    <p class="hint-text">Already uploaded — choose a new file only to replace it.</p>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if complaint.resolved_photo_path %}
+    <div class="detail-photo-block">
+        <h3>Resolved Photo (Proof)</h3>
+        <img src="{{ url_for('static', filename=complaint.resolved_photo_path) }}" class="detail-photo" alt="Resolved photo">
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleResolvedFields(status) {
+    document.getElementById('resolvedPhotoGroup').style.display = status === 'Resolved' ? 'block' : 'none';
+}
+</script>
+
+{% if complaint.latitude and complaint.longitude %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script id="complaint-map-data" type="application/json">
+{"lat": {{ complaint.latitude }}, "lng": {{ complaint.longitude }}, "category": {{ complaint.category|tojson }}, "priority": {{ complaint.priority|tojson }}}
+</script>
+<script>
+const mapData = JSON.parse(document.getElementById('complaint-map-data').textContent);
+const map = L.map('miniMap').setView([mapData.lat, mapData.lng], 16);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+L.marker([mapData.lat, mapData.lng]).addTo(map)
+    .bindPopup(mapData.category + " - " + mapData.priority + " Priority").openPopup();
+
+// Fix partly loaded map tiles
+window.addEventListener('load', function () {
+    setTimeout(function () { map.invalidateSize(); map.setView([mapData.lat, mapData.lng], 16); }, 300);
+});
+setTimeout(function () { map.invalidateSize(); }, 800);
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Error {{ code or error_code or 404 }} - Smart Civic Guardian</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+.error-page-container {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+.error-page-container h1 {
+    font-size: 5rem;
+    font-weight: 800;
+    color: #107048;
+    margin-bottom: 0.5rem;
+}
+.error-page-container p {
+    font-size: 1.2rem;
+    color: #495057;
+    margin-bottom: 2rem;
+    max-width: 480px;
+}
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+.btn-home {
+    background-color: #107048;
+    color: #ffffff;
+    padding: 0.75rem 1.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.btn-home:hover {
+    background-color: #0b4e32;
+    color: #ffffff;
+}
+.btn-back {
+    background-color: #f1f3f5;
+    color: #212529;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid #ced4da;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="error-page-container">
+    <h1>{{ code or error_code or 404 }}</h1>
+    <p>{{ message or error_message or "The requested page was not found or an error occurred." }}</p>
+    <div class="error-actions">
+        <button onclick="window.history.back()" class="btn-back">← Go Back</button>
+        <a href="{{ FRONTEND_URL or '/' }}" class="btn-home">Go Home</a>
+    </div>
+</div>
+</body>
+</html>

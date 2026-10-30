@@ -1,0 +1,50 @@
+{% extends 'shared/base.html' %}
+{% block title %}My Profile - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+{% set total = complaints|length %}
+{% set pending = complaints|selectattr('status', 'equalto', 'Pending')|list|length %}
+{% set inprogress = complaints|selectattr('status', 'equalto', 'In Progress')|list|length %}
+{% set resolved = complaints|selectattr('status', 'equalto', 'Resolved')|list|length %}
+
+<h1 class="page-title">My Profile</h1>
+
+<div class="profile-card">
+    <div class="profile-header">
+        <span class="avatar-circle profile-avatar">{{ user.name[0]|upper }}</span>
+        <div>
+            <h2>{{ user.name }}</h2>
+            <p class="hint-text">{{ user.email }}</p>
+        </div>
+    </div>
+
+    <form method="POST" class="profile-form">
+        <div class="profile-field">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="profile-input" value="{{ user.name }}" required>
+        </div>
+        <div class="profile-field">
+            <label for="phone">Mobile Number</label>
+            <input type="text" id="phone" name="phone" class="profile-input" value="{{ user.phone or '' }}">
+        </div>
+        <div class="profile-field">
+            <label>Email</label>
+            <input type="text" class="profile-input" value="{{ user.email }}" disabled>
+            <span class="hint-text">Email cannot be changed.</span>
+        </div>
+        <div class="profile-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('auth.forgot_password') }}" class="btn btn-outline">Change Password</a>
+        </div>
+    </form>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-total"><span class="stat-number">{{ total }}</span><span class="stat-label">Total Complaints</span></div>
+    <div class="stat-card stat-pending"><span class="stat-number">{{ pending }}</span><span class="stat-label">Pending</span></div>
+    <div class="stat-card stat-progress"><span class="stat-number">{{ inprogress }}</span><span class="stat-label">In Progress</span></div>
+    <div class="stat-card stat-resolved"><span class="stat-number">{{ resolved }}</span><span class="stat-label">Resolved</span></div>
+</div>
+
+{% endblock %}

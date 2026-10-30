@@ -1,0 +1,40 @@
+{% extends 'shared/base.html' %}
+{% block title %}Feedback - Smart Civic Guardian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Feedback</h1>
+<p class="page-subtitle">
+    Average rating: <strong>{{ rating.average }}</strong> / 5 ({{ rating.total }} review{{ 's' if rating.total != 1 }})
+</p>
+
+<div class="card-panel">
+    {% if feedback|length == 0 %}
+    <div class="empty-state"><p>No feedback submitted yet.</p></div>
+    {% else %}
+    <div class="feedback-list">
+    {% for f in feedback %}
+        <div class="feedback-card">
+            <div class="feedback-card-header">
+                <div>
+                    <strong>{{ f.citizen_name }}</strong>
+                    <span class="hint-text">— {{ f.category }} — {{ f.location_name or 'No location' }}</span>
+                </div>
+                <span class="star-rating">
+                    {% for i in range(1, 6) %}{% if i <= f.rating %}★{% else %}☆{% endif %}{% endfor %}
+                </span>
+            </div>
+            {% if f.comment %}
+            <p class="feedback-comment">{{ f.comment }}</p>
+            {% endif %}
+            <div class="feedback-card-footer">
+                <span class="hint-text">Complaint #{{ f.complaint_id }}</span>
+                <span class="hint-text">{{ f.created_at|ist }}</span>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,113 @@
+.home-body { margin: 0; background: var(--bg); }
+
+.public-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 3rem;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+.public-nav-brand { font-weight: 800; font-size: 1.1rem; color: var(--text-dark); display: flex; align-items: center; gap: 0.5rem; }
+.public-nav-links { display: flex; align-items: center; gap: 1.8rem; }
+.public-nav-links a:not(.btn) { color: var(--text-muted); font-weight: 500; font-size: 0.92rem; }
+.public-nav-links a:not(.btn):hover { color: var(--primary); }
+
+.hero {
+    position: relative;
+    min-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-image: linear-gradient(135deg, rgba(11,56,56,0.75), rgba(15,76,76,0.55)), url('../images/hero-city.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: var(--primary-dark);
+}
+
+.hero-content { position: relative; max-width: 640px; margin: 0 auto; text-align: center; padding: 2rem 1.5rem; }
+.hero-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    margin-bottom: 1.2rem;
+}
+.hero-content h1 { font-size: 2.3rem; line-height: 1.1; margin: 0 0 0.6rem; color: #fff; font-weight: 800; white-space: nowrap; }
+.hero-tagline { font-size: 1.3rem; font-weight: 700; color: #A7D7C5; margin: 0 0 0.6rem; }
+.hero-desc { color: #E6F4F1; font-size: 1.02rem; margin-bottom: 1.8rem; }
+.hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-outline-light { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); padding: 0.65rem 1.4rem; border-radius: var(--radius-sm); font-weight: 600; }
+.btn-outline-light:hover { background: var(--primary-light); }
+
+.feature-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: -2.5rem auto 3rem;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 1.8rem 2rem;
+    position: relative;
+    z-index: 2;
+}
+.feature-item { flex: 1; min-width: 200px; display: flex; gap: 0.8rem; align-items: flex-start; }
+.feature-icon { color: var(--primary); display: flex; align-items: flex-start; }
+.feature-item strong { display: block; font-size: 0.95rem; color: var(--text-dark); margin-bottom: 0.2rem; }
+.feature-item p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+
+.about-section { max-width: 700px; margin: 0 auto 3rem; text-align: center; padding: 0 1.5rem; }
+.about-section h2 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 0.8rem; }
+.about-section p { color: var(--text-muted); line-height: 1.7; }
+
+.public-footer { background: var(--primary-gradient); color: #fff; text-align: center; padding: 1.5rem; font-size: 0.85rem; }
+
+@media (max-width: 768px) {
+    .public-nav { padding: 1rem 1.2rem; }
+    .public-nav-links { gap: 1rem; font-size: 0.85rem; }
+    .hero-content h1 { font-size: 2.1rem; }
+}
+
+.section-title { text-align: center; font-size: 1.5rem; color: var(--text-dark); margin-bottom: 2rem; }
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.2rem;
+    max-width: 1000px;
+    margin: 0 auto 3.5rem;
+    padding: 0 1.5rem;
+}
+.category-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+.cat-icon { color: var(--primary); display: flex; justify-content: center; margin-bottom: 0.6rem; }
+.category-card strong { display: block; color: var(--text-dark); margin-bottom: 0.3rem; }
+.category-card p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+
+.how-it-works { max-width: 1100px; margin: 0 auto 3.5rem; padding: 0 1.5rem; }
+.steps-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+.step-card { text-align: center; }
+.step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--primary); color: #fff; font-weight: 700; margin-bottom: 0.8rem;
+}
+.step-card strong { display: block; color: var(--text-dark); margin-bottom: 0.4rem; }
+.step-card p { font-size: 0.85rem; color: var(--text-muted); }

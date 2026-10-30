@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Email OTP - Smart Civic Guardian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+.otp-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 24px 0;
+}
+.otp-digit {
+    width: 48px;
+    height: 56px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+.otp-digit:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+}
+.otp-digit.filled {
+    border-color: #198754;
+    background: #f0fdf4;
+}
+.timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 10px 0 16px;
+}
+.timer-badge.urgent {
+    background: #fef2f2;
+    color: #dc2626;
+}
+.resend-row {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+}
+.btn-link {
+    background: none;
+    border: none;
+    color: #0d6efd;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 14px;
+}
+.btn-link:disabled {
+    color: #94a3b8;
+    text-decoration: none;
+    cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+
+<div class="split-auth">
+    <div class="split-auth-photo">
+        <span class="brand-icon-big">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg>
+        </span>
+        <h2>Email Verification</h2>
+        <p>We've sent a 6-digit verification code to your email address to ensure account security.</p>
+    </div>
+
+    <div class="split-auth-form">
+        <div class="auth-card">
+            <div style="margin-bottom: 16px;">
+                <a href="{{ url_for('auth.register') }}" class="btn-back" style="display: inline-flex; align-items: center; gap: 6px; color: #475569; text-decoration: none; font-size: 14px; font-weight: 600; padding: 7px 13px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; transition: all 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Back to Registration
+                </a>
+            </div>
+            <h2>Enter Verification Code</h2>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
+                Code sent to: <strong>{{ email }}</strong>
+            </p>
+
+            <div id="expiryTimerBadge" class="timer-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Expires in: <span id="timeRemaining">05:00</span>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.verify_otp') }}" id="otpForm">
+                <input type="hidden" name="otp" id="combinedOtp">
+
+                <div class="otp-wrapper" id="otpContainer">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit1" name="digit_1" autofocus autocomplete="off">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit2" name="digit_2" autocomplete="off">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit3" name="digit_3" autocomplete="off">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit4" name="digit_4" autocomplete="off">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit5" name="digit_5" autocomplete="off">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="digit6" name="digit_6" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="verifyBtn" style="padding: 12px; font-size: 15px; font-weight: 600;">
+                    Verify & Create Account
+                </button>
+            </form>
+
+            <div class="resend-row">
+                <span>Didn't receive the email?</span>
+                <form method="POST" action="{{ url_for('auth.resend_otp') }}" style="display:inline;" id="resendForm">
+                    <button type="submit" class="btn-link" id="resendBtn" disabled>
+                        Resend OTP <span id="cooldownCounter">({{ cooldown }}s)</span>
+                    </button>
+                </form>
+            </div>
+
+            <p class="auth-switch" style="margin-top: 24px;">
+                Wrong email address? <a href="{{ url_for('auth.register') }}">Start over</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Six-Digit OTP Input Handler with Auto-Advance, Backspace & Paste
+const digits = Array.from(document.querySelectorAll('.otp-digit'));
+const combinedOtpInput = document.getElementById('combinedOtp');
+const otpForm = document.getElementById('otpForm');
+
+digits.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val;
+        if (val) {
+            e.target.classList.add('filled');
+            if (index < digits.length - 1) {
+                digits[index + 1].focus();
+            }
+        } else {
+            e.target.classList.remove('filled');
+        }
+        updateCombined();
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+            if (!input.value && index > 0) {
+                digits[index - 1].focus();
+                digits[index - 1].value = '';
+                digits[index - 1].classList.remove('filled');
+            } else {
+                input.value = '';
+                input.classList.remove('filled');
+            }
+            updateCombined();
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            digits[index - 1].focus();
+        } else if (e.key === 'ArrowRight' && index < digits.length - 1) {
+            digits[index + 1].focus();
+        }
+    });
+
+    // Paste handling
+    input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+        if (pasted.length > 0) {
+            for (let i = 0; i < digits.length; i++) {
+                if (i < pasted.length) {
+                    digits[i].value = pasted[i];
+                    digits[i].classList.add('filled');
+                } else {
+                    digits[i].value = '';
+                    digits[i].classList.remove('filled');
+                }
+            }
+            updateCombined();
+            const nextIdx = Math.min(pasted.length, digits.length - 1);
+            digits[nextIdx].focus();
+        }
+    });
+});
+
+function updateCombined() {
+    const code = digits.map(d => d.value).join('');
+    combinedOtpInput.value = code;
+}
+
+otpForm.addEventListener('submit', (e) => {
+    updateCombined();
+    if (combinedOtpInput.value.length !== 6) {
+        e.preventDefault();
+        alert('Please enter all 6 digits of the verification code.');
+        digits.find(d => !d.value)?.focus();
+    }
+});
+
+// 5-Minute Expiration Countdown
+let expirySeconds = 300; // 5 mins
+const timerSpan = document.getElementById('timeRemaining');
+const timerBadge = document.getElementById('expiryTimerBadge');
+
+const expiryInterval = setInterval(() => {
+    expirySeconds--;
+    if (expirySeconds <= 0) {
+        clearInterval(expiryInterval);
+        timerSpan.textContent = 'Expired';
+        timerBadge.classList.add('urgent');
+        document.getElementById('verifyBtn').disabled = true;
+    } else {
+        const mins = String(Math.floor(expirySeconds / 60)).padStart(2, '0');
+        const secs = String(expirySeconds % 60).padStart(2, '0');
+        timerSpan.textContent = `${mins}:${secs}`;
+        if (expirySeconds < 60) {
+            timerBadge.classList.add('urgent');
+        }
+    }
+}, 1000);
+
+// Resend Cooldown Countdown (60s)
+let cooldown = {{ cooldown }};
+const resendBtn = document.getElementById('resendBtn');
+const cooldownCounter = document.getElementById('cooldownCounter');
+
+const cooldownInterval = setInterval(() => {
+    cooldown--;
+    if (cooldown <= 0) {
+        clearInterval(cooldownInterval);
+        resendBtn.disabled = false;
+        cooldownCounter.textContent = '';
+    } else {
+        cooldownCounter.textContent = `(${cooldown}s)`;
+    }
+}, 1000);
+</script>
+
+</body>
+</html>
+

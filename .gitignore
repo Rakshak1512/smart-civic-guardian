@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Environment / secrets
+.env
+.env.*
+.env.local
+backend/.env
+frontend/.env
+*.env
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Local Databases containing local test/user data
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+database/civic_guardian.db
+database/civic_guardian copy.db
+
+# Uploaded files (keep folder structure, ignore uploaded files)
+frontend/static/uploads/issue_photos/*
+frontend/static/uploads/resolved_photos/*
+!frontend/static/uploads/issue_photos/.gitkeep
+!frontend/static/uploads/resolved_photos/.gitkeep
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

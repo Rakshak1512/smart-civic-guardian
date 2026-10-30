@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register - Smart Civic Guardian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+
+<div class="split-auth">
+    <div class="split-auth-photo">
+        <span class="brand-icon-big">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg>
+        </span>
+        <h2>Join Our Community</h2>
+        <p>Together for cleaner, safer and greener cities. Create an account to start reporting.</p>
+    </div>
+
+    <div class="split-auth-form">
+        <div class="auth-card">
+            <div style="margin-bottom: 16px;">
+                <a href="{{ url_for('auth.home') }}" class="btn-back" style="display: inline-flex; align-items: center; gap: 6px; color: #475569; text-decoration: none; font-size: 14px; font-weight: 600; padding: 7px 13px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; transition: all 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Back to Home
+                </a>
+            </div>
+            <h2>Create Account</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm" novalidate>
+                <div class="role-toggle">
+                    <label class="role-option">
+                        <input type="radio" name="role" value="citizen" {% if not form or form.role != 'authority' %}checked{% endif %} onchange="toggleAuthorityFields()">
+                        <span>Citizen</span>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="role" value="authority" {% if form and form.role == 'authority' %}checked{% endif %} onchange="toggleAuthorityFields()">
+                        <span>Authority</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Full name"
+                           value="{{ form.name if form else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="you@example.com"
+                           value="{{ form.email if form else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="10-digit phone number"
+                           value="{{ form.phone if form else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="age">Age <span class="required">*</span></label>
+                    <input type="number" id="age" name="age" required min="1" max="120" placeholder="Your age"
+                           value="{{ form.age if form else '' }}">
+                </div>
+
+                <!-- Authority only -->
+                <div id="authorityFields" class="authority-fields" style="display:none;">
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" name="department">
+                            <option value="">-- Select Department --</option>
+                            <option value="Garbage">Garbage</option>
+                            <option value="Water Leakage">Water Leakage</option>
+                            <option value="Electricity Issue">Electricity Issue</option>
+                            <option value="Pothole">Pothole</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="designation">Designation</label>
+                        <input type="text" id="designation" name="designation" placeholder="e.g. Junior Engineer">
+                    </div>
+                </div>
+
+                <!-- Citizen only -->
+                <div id="citizenFields">
+                    <div class="form-group">
+                        <label for="description">About You <span class="hint-text">(optional)</span></label>
+                        <textarea id="description" name="description" rows="3"
+                                  placeholder="A short description about yourself">{{ form.description if form else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" required minlength="6" placeholder="At least 6 characters">
+                        <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="password-field">
+                        <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter password">
+                        <button type="button" class="password-toggle" data-target="confirm_password" aria-label="Show password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+
+            <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide password
+document.querySelectorAll('.password-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var input = document.getElementById(this.getAttribute('data-target'));
+        var isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        this.classList.toggle('active', isHidden);
+    });
+});
+
+// Show the right extra fields for the selected role
+function syncRoleFields() {
+    var role = document.querySelector('input[name="role"]:checked').value;
+    document.getElementById('authorityFields').style.display = (role === 'authority') ? 'block' : 'none';
+    document.getElementById('citizenFields').style.display = (role === 'citizen') ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="role"]').forEach(function (radio) {
+    radio.addEventListener('change', syncRoleFields);
+});
+syncRoleFields();
+</script>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
