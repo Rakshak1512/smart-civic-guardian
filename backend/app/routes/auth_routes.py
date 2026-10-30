@@ -69,6 +69,7 @@ def role_required(*roles):
 # Public Information Pages
 # ---------------------------------------------------------------------------
 
+@auth_bp.route("/")
 @auth_bp.route("/home")
 def home():
     if "user_id" in session:

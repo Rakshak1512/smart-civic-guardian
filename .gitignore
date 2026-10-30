@@ -33,6 +33,10 @@ frontend/static/uploads/issue_photos/*
 frontend/static/uploads/resolved_photos/*
 !frontend/static/uploads/issue_photos/.gitkeep
 !frontend/static/uploads/resolved_photos/.gitkeep
+public/static/uploads/issue_photos/*
+public/static/uploads/resolved_photos/*
+!public/static/uploads/issue_photos/.gitkeep
+!public/static/uploads/resolved_photos/.gitkeep
 
 # Editor and OS
 .vscode/

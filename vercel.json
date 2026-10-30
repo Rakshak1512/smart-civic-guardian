@@ -9,7 +9,19 @@
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/frontend/static/$1"
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
     },
     {
       "src": "/(.*)",
@@ -20,4 +32,3 @@
     "PYTHON_VERSION": "3.12"
   }
 }
-

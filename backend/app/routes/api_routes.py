@@ -49,21 +49,8 @@ def require_auth(roles=None):
 
 
 # ---------------------------------------------------------------------------
-# Root & Health Endpoints
+# Health & API Info Endpoints
 # ---------------------------------------------------------------------------
-
-@api_bp.route("/", methods=["GET"])
-def api_root():
-    """Backend Root: Responds with JSON API information, NOT the frontend homepage."""
-    return jsonify({
-        "status": "success",
-        "service": "Smart Civic Guardian REST API Server",
-        "version": "1.0.0",
-        "health": "/api/health",
-        "documentation": "/api",
-        "frontend_url": current_app.config.get("FRONTEND_URL", "http://localhost:3000"),
-    })
-
 
 @api_bp.route("/api/health", methods=["GET"])
 def api_health():

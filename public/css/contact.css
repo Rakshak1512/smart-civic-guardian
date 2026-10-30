@@ -1,0 +1,25 @@
+.contact-section {
+    max-width: 1000px;
+    margin: 3rem auto 4rem;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 2.5rem;
+}
+.contact-info { display: flex; flex-direction: column; gap: 1.6rem; }
+.contact-item { display: flex; gap: 0.9rem; align-items: flex-start; }
+.contact-item .why-icon { color: var(--primary); margin: 0; }
+.contact-item strong { display: block; color: var(--text-dark); margin-bottom: 0.2rem; }
+.contact-item p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+.contact-form {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .contact-section { grid-template-columns: 1fr; }
+}

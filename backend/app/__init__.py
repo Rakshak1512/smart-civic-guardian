@@ -26,9 +26,13 @@ def create_app():
     if not os.path.exists(templates_dir):
         templates_dir = os.path.join(backend_dir, "templates")
 
-    static_dir = os.path.join(project_root, "frontend", "static")
-    if not os.path.exists(static_dir):
-        static_dir = os.path.join(backend_dir, "static")
+    public_static_dir = os.path.join(project_root, "public", "static")
+    if os.path.exists(public_static_dir):
+        static_dir = public_static_dir
+    else:
+        static_dir = os.path.join(project_root, "frontend", "static")
+        if not os.path.exists(static_dir):
+            static_dir = os.path.join(backend_dir, "static")
 
     app = Flask(
         __name__,
@@ -86,6 +90,34 @@ def create_app():
             "current_name": session.get("name"),
             "unread_count": session.get("unread_count", 0),
         }
+
+    # ---------------------------------------------------------------------------
+    # Static Assets Serving Route (Dual-Layer Resilience for Vercel and Local)
+    # ---------------------------------------------------------------------------
+
+    @app.route("/static/<path:filename>")
+    def serve_static_asset(filename):
+        for candidate_dir in [
+            os.path.join(project_root, "public", "static"),
+            os.path.join(project_root, "frontend", "static"),
+            os.path.join(backend_dir, "static"),
+        ]:
+            full_path = os.path.join(candidate_dir, filename)
+            if os.path.exists(full_path) and os.path.isfile(full_path):
+                return send_from_directory(candidate_dir, filename)
+        return jsonify({"error": f"Static asset '{filename}' not found"}), 404
+
+    @app.route("/css/<path:filename>")
+    def serve_css_direct(filename):
+        return serve_static_asset(f"css/{filename}")
+
+    @app.route("/js/<path:filename>")
+    def serve_js_direct(filename):
+        return serve_static_asset(f"js/{filename}")
+
+    @app.route("/images/<path:filename>")
+    def serve_images_direct(filename):
+        return serve_static_asset(f"images/{filename}")
 
     # ---------------------------------------------------------------------------
     # Secure Private Image Proxy / Redirect Route
