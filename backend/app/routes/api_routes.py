@@ -52,6 +52,21 @@ def require_auth(roles=None):
 # Health & API Info Endpoints
 # ---------------------------------------------------------------------------
 
+@api_bp.route("/", methods=["GET"])
+def api_root():
+    """Backend Root: Responds with JSON API information, NOT the frontend homepage."""
+    frontend_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
+    return jsonify({
+        "status": "success",
+        "service": "Smart Civic Guardian REST API Server",
+        "message": "Smart Civic Guardian Backend REST API is running",
+        "version": "1.0.0",
+        "health": "/api/health",
+        "documentation": "/api",
+        "frontend_url": frontend_url,
+    })
+
+
 @api_bp.route("/api/health", methods=["GET"])
 def api_health():
     """Health check endpoint specified in Master Prompt."""
