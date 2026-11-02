@@ -266,7 +266,7 @@ def cross_validate(items, features, targets, source_indices, kinds,
 
     for number, (train_indices, validation_indices) in enumerate(folds, start=1):
         train_mask = np.isin(source_indices, train_indices)
-        classifier = fit_head(features[train_mask], targets[train_mask])
+        classifier = fit_head(features[train_mask], targets[train_mask], c_value)
         for image_index in validation_indices:
             # Validation uses only original and mirrored versions.
             mask = (source_indices == image_index) & (kinds <= 1)
