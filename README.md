@@ -113,19 +113,60 @@ python frontend/run.py
 
 ---
 
-## Deploying on Vercel
+## Deploying as Separate Frontend and Backend Services (Render)
 
-1. Push your repository to GitHub.
-2. In [Vercel Dashboard](https://vercel.com), click **Add New Project** and select `smart-civic-guardian`.
-3. In **Environment Variables**, add:
-   - `DATABASE_URL`
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SUPABASE_BUCKET=images`
-   - `OTP_PEPPER`
-   - `SECRET_KEY`
-   - `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`
-4. Click **Deploy**. Vercel will automatically build using `api/index.py` and serve static assets via `/frontend/static`.
+This repository contains **two Flask applications**. The frontend is not a static-only website: it runs Flask routes and proxies requests to the backend. Therefore, do not deploy the `frontend/` directory to Netlify as a static site.
+
+The included `render.yaml` defines two Render Web Services from the same GitHub repository:
+
+- **Backend:** runs `backend/run.py` through Gunicorn and exposes the REST/API and application routes.
+- **Frontend:** runs `frontend/server.py` through Gunicorn and forwards application requests to the backend.
+
+### Deploy
+
+1. In Render, choose **New → Blueprint** and connect this GitHub repository.
+2. Select the `fix/deployment-two-flask-services` branch for the first deployment, or merge the pull request into `main` and deploy `main`.
+3. Render reads `render.yaml` and creates the two web services.
+4. Add the required secrets and service URLs in each service's Environment settings (never commit real secrets).
+
+### Backend environment variables
+
+Set these on the backend service:
+
+- `FLASK_ENV=production`
+- `HOST=0.0.0.0`
+- `SECRET_KEY` — generate a unique secret with `python -c "import secrets; print(secrets.token_hex(32))"`
+- `OTP_PEPPER` — generate a separate unique secret with the same command
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_BUCKET=images`
+- `DATABASE_URL` (if used by your Supabase database configuration)
+- `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`
+- `FRONTEND_URL` — the deployed frontend URL
+- `BACKEND_URL` — the deployed backend URL
+- `CORS_ORIGINS` — include the deployed frontend origin, without a trailing slash
+
+### Frontend environment variables
+
+Set these on the frontend service:
+
+- `FLASK_ENV=production`
+- `SECRET_KEY` — use the same value as the backend so proxied Flask session cookies remain compatible
+- `FRONTEND_URL` — the deployed frontend URL
+- `BACKEND_URL` — the deployed backend URL, including `https://`
+
+After Render creates both services, copy their actual URLs into these variables. Set the backend's `FRONTEND_URL` and `CORS_ORIGINS` to the frontend URL. Set the frontend's `BACKEND_URL` to the backend URL. Save the variables and redeploy both services.
+
+### Health checks
+
+- Backend: `https://YOUR-BACKEND-URL/api/health`
+- Frontend: `https://YOUR-FRONTEND-URL/`
+
+Do not mark deployment complete until both health checks succeed and you have tested registration/login, OTP email delivery, issue photo upload and analysis, GPS/manual map pin, complaint submission, image display, and authority/admin actions.
+
+### Existing Vercel deployment
+
+The repository also retains `api/index.py` and `vercel.json` for the existing unified Vercel deployment. The two-service Render setup is the recommended option when you need distinct frontend and backend URLs. A static Netlify deployment cannot run the Flask frontend server without converting it to a static frontend or implementing a supported serverless-function architecture.
 
 ---
 
