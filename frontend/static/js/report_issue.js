@@ -4,7 +4,8 @@
  * Implements high-accuracy multi-sample device location detection using
  * navigator.geolocation.watchPosition(), accurate uncertainty reporting in metres,
  * separate error diagnostics (denied, unavailable, timeout), interactive Leaflet
- * map-pin correction, and non-blocking complaint submission.
+ * map-pin correction, reverse-geocoded address resolution, and bottom-displayed
+ * location confirmation.
  */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -23,6 +24,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const accInput = document.getElementById('location_accuracy');
     const srcInput = document.getElementById('location_source');
 
+    // Bottom detected location display elements
+    const detectedLocationCard = document.getElementById('detectedLocationCard');
+    const detectedAccuracyBadge = document.getElementById('detectedAccuracyBadge');
+    const detectedSourceBadge = document.getElementById('detectedSourceBadge');
+    const detectedAddressText = document.getElementById('detectedAddressText');
+    const detectedLatText = document.getElementById('detectedLatText');
+    const detectedLonText = document.getElementById('detectedLonText');
+
     let leafletMap = null;
     let mapMarker = null;
     let accuracyCircle = null;
@@ -33,12 +42,118 @@ document.addEventListener('DOMContentLoaded', function () {
     let readingCount = 0;
     let isSampling = false;
 
+    let currentResolvedAddress = '';
+
     // High accuracy thresholds (in metres)
     const PRECISE_ACCURACY_THRESHOLD = 25; // <= 25 m triggers early stop (dedicated GPS)
     const MASTER_TIMEOUT_MS = 12000;       // Up to 12s to sample and refine position
 
     // Default center for manual map pin placement if device GPS is completely disabled
     const DEFAULT_MAP_CENTER = [12.9716, 77.5946];
+
+    // ---------------------------------------------------------------------------
+    // Reverse Geocoding & Bottom Location Display
+    // ---------------------------------------------------------------------------
+    function updateBottomDetectedDisplay(lat, lon, accuracyMeters, sourceLabel, isAdjusted) {
+        if (!detectedLocationCard) return;
+
+        detectedLocationCard.style.display = 'block';
+
+        if (detectedLatText) detectedLatText.textContent = lat.toFixed(6);
+        if (detectedLonText) detectedLonText.textContent = lon.toFixed(6);
+
+        if (detectedSourceBadge) {
+            detectedSourceBadge.textContent = sourceLabel || 'Device Fix';
+        }
+
+        if (detectedAccuracyBadge) {
+            if (accuracyMeters && accuracyMeters > 0) {
+                const roundedAcc = Math.round(accuracyMeters);
+                if (roundedAcc <= 30) {
+                    detectedAccuracyBadge.textContent = '±' + roundedAcc + ' m (High Precision GPS)';
+                    detectedAccuracyBadge.style.background = '#dcfce7';
+                    detectedAccuracyBadge.style.color = '#166534';
+                } else if (roundedAcc <= 80) {
+                    detectedAccuracyBadge.textContent = '±' + roundedAcc + ' m (Moderate)';
+                    detectedAccuracyBadge.style.background = '#fef3c7';
+                    detectedAccuracyBadge.style.color = '#92400e';
+                } else {
+                    detectedAccuracyBadge.textContent = '±' + roundedAcc + ' m (Approximate)';
+                    detectedAccuracyBadge.style.background = '#ffedd5';
+                    detectedAccuracyBadge.style.color = '#9a3412';
+                }
+            } else {
+                detectedAccuracyBadge.textContent = 'Map Pin';
+                detectedAccuracyBadge.style.background = '#E6F4F1';
+                detectedAccuracyBadge.style.color = '#0d6868';
+            }
+        }
+
+        // Initial fallback address while reverse geocode resolves
+        currentResolvedAddress = 'Coordinates: ' + lat.toFixed(5) + ', ' + lon.toFixed(5);
+        renderFullAddressLine();
+
+        // Query Nominatim reverse geocode for actual place / road name
+        fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lon, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function (res) {
+            if (!res.ok) throw new Error('Geocoding response not ok');
+            return res.json();
+        })
+        .then(function (data) {
+            if (data && data.display_name) {
+                const addr = data.address || {};
+                const parts = [];
+                const primary = addr.road || addr.pedestrian || addr.suburb || addr.quarter;
+                if (primary) parts.push(primary);
+                const secondary = addr.neighbourhood || addr.city_district || addr.suburb;
+                if (secondary && !parts.includes(secondary)) parts.push(secondary);
+                const city = addr.city || addr.town || addr.municipality;
+                if (city && !parts.includes(city)) parts.push(city);
+
+                currentResolvedAddress = parts.length > 0 ? parts.join(', ') : data.display_name.split(',').slice(0, 3).join(',');
+                renderFullAddressLine();
+            }
+        })
+        .catch(function () {
+            // Keep coordinates as fallback on network error
+            renderFullAddressLine();
+        });
+    }
+
+    function renderFullAddressLine() {
+        if (!detectedAddressText) return;
+
+        const manualText = manualInput && manualInput.value.trim();
+        const baseAddr = currentResolvedAddress || 'Detected Location';
+
+        if (manualText) {
+            detectedAddressText.innerHTML = '<strong>' + escapeHtml(baseAddr) + '</strong>' +
+                '<span style="font-weight:normal;color:var(--text-muted);"> — Landmark: ' + escapeHtml(manualText) + '</span>';
+        } else {
+            detectedAddressText.textContent = baseAddr;
+        }
+
+        // Sync with location_name hidden input
+        if (locNameInput && latInput && latInput.value) {
+            const acc = accInput && accInput.value ? ' (±' + Math.round(Number(accInput.value)) + ' m)' : '';
+            const landmarkPart = manualText ? ' — Landmark: ' + manualText : '';
+            locNameInput.value = (baseAddr + acc + landmarkPart).substring(0, 250);
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function (m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    if (manualInput) {
+        manualInput.addEventListener('input', function () {
+            renderFullAddressLine();
+        });
+    }
 
     // ---------------------------------------------------------------------------
     // Leaflet Mini Map Initialization & Updates
@@ -118,11 +233,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const origAcc = accInput && accInput.value ? Math.round(Number(accInput.value)) : null;
 
         if (srcInput) srcInput.value = 'map_pin_manual';
-        if (locNameInput) {
-            locNameInput.value = origAcc
-                ? 'Map Pin (Adjusted from ±' + origAcc + ' m device fix)'
-                : 'Map Pin (' + roundedLat + ', ' + roundedLon + ')';
-        }
 
         if (mapMarker) {
             mapMarker.setLatLng([roundedLat, roundedLon]);
@@ -135,8 +245,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (accuracyCircle) {
-            // Keep the original device uncertainty circle centered at original fix,
-            // or style it dashed to indicate user moved beyond it
             accuracyCircle.setStyle({ color: '#6b7280', fillColor: '#9ca3af', fillOpacity: 0.1 });
         }
 
@@ -146,6 +254,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (manualBox) manualBox.style.display = 'block';
+
+        // Update the bottom detected location card
+        updateBottomDetectedDisplay(roundedLat, roundedLon, origAcc, 'Map Pin Adjusted', true);
     }
 
     // ---------------------------------------------------------------------------
@@ -161,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 retryBtn.disabled = false;
                 retryBtn.textContent = 'Retry Location';
             }
+            if (detectedLocationCard) detectedLocationCard.style.display = 'none';
             initOrUpdateMap(null, null, null, true);
         }
 
@@ -234,6 +346,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Render interactive Leaflet map with accuracy circle
             initOrUpdateMap(lat, lon, accuracy, false);
 
+            // Display detected location clearly on the bottom
+            updateBottomDetectedDisplay(lat, lon, accuracy, accuracy <= 30 ? 'High Precision GPS' : 'Device Fix (Wi-Fi/Network)', false);
+
             if (manualBox) {
                 manualBox.style.display = 'block';
                 const manualLabel = manualBox.querySelector('label');
@@ -293,6 +408,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (devLonInput) devLonInput.value = '';
             if (accInput) accInput.value = '';
             if (srcInput) srcInput.value = '';
+
+            if (detectedLocationCard) detectedLocationCard.style.display = 'none';
 
             gpsStatus.innerHTML = '📍 <strong>Detecting device location…</strong> (sampling GPS & Wi-Fi fix)';
             if (gpsHint) gpsHint.textContent = 'Collecting high-accuracy readings…';

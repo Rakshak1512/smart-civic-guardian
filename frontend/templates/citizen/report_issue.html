@@ -69,6 +69,25 @@
                     <button type="button" id="retryGpsBtn" class="btn btn-outline btn-small">Retry Location</button>
                     <small id="gpsHint" class="hint-text" style="margin:0;"></small>
                 </div>
+
+                <!-- Detected Location Display (Shown on Bottom after detection) -->
+                <div id="detectedLocationCard" class="detected-location-card" style="display:none;margin-top:0.9rem;padding:0.9rem 1.1rem;background:#f7faf9;border:1.5px solid #c2e2dc;border-radius:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;flex-wrap:wrap;gap:0.4rem;">
+                        <div style="display:flex;align-items:center;gap:0.45rem;font-size:0.95rem;color:#0B3838;">
+                            <span>📍</span>
+                            <strong>Detected Location</strong>
+                            <span id="detectedAccuracyBadge" style="display:inline-block;padding:0.15rem 0.55rem;border-radius:12px;font-size:0.78rem;font-weight:600;background:#ffedd5;color:#9a3412;">±141 m</span>
+                        </div>
+                        <span id="detectedSourceBadge" style="font-size:0.75rem;color:#6b7280;background:#fff;border:1px solid #e5e7eb;padding:0.15rem 0.45rem;border-radius:4px;">Device Fix</span>
+                    </div>
+                    <div id="detectedAddressText" style="font-size:0.92rem;font-weight:600;color:#1f2937;margin-bottom:0.35rem;line-height:1.4;">
+                        Resolving address...
+                    </div>
+                    <div style="display:flex;gap:1.2rem;font-size:0.82rem;color:#6b7280;font-family:monospace;flex-wrap:wrap;">
+                        <span><strong>Lat:</strong> <span id="detectedLatText">-</span></span>
+                        <span><strong>Lon:</strong> <span id="detectedLonText">-</span></span>
+                    </div>
+                </div>
             </div>
             <div class="wizard-nav">
                 <button type="button" class="btn btn-outline wizard-back" data-back="1">← Back</button>
