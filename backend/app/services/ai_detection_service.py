@@ -1,128 +1,100 @@
-"""
-AI Issue Detection Service
----------------------------
-Analyzes an uploaded complaint photo and suggests a category, a confidence
-score, and a priority level.
+"""Image-based civic issue classification.
 
-This module is intentionally modular:
-  - `detect_category()` is the single entry point used by the rest of the app.
-  - Right now it uses a LOCAL FALLBACK heuristic (no paid API required), based
-    on simple image statistics (average colour / brightness / edge density)
-    which correlate loosely with the four supported categories.
-  - To plug in a real trained ML model or a paid API later, simply replace
-    the body of `detect_category()` (or `_local_fallback_detect()`) while
-    keeping the same return format:
-        {"category": str, "confidence": float, "priority": str}
-
-Supported categories: Garbage, Water Leakage, Electricity Issue, Pothole
+Uses the shipped MobileNetV2 feature extractor and trained civic classifier.
+No random, filename, or colour-based guesses are made when the model is not
+available; callers receive an explicit low-confidence result instead.
 """
+from __future__ import annotations
 
 import os
-import random
+import tempfile
+
+from PIL import Image, UnidentifiedImageError
+
 try:
     from ai_model.predict import predict as _civic_predict
-except Exception:
+except Exception as exc:  # import errors are surfaced as an unavailable model
     _civic_predict = None
+    _MODEL_IMPORT_ERROR = str(exc)
+else:
+    _MODEL_IMPORT_ERROR = None
+
+CATEGORIES = ("Garbage", "Water Leakage", "Electricity Issue", "Pothole")
 
 
-CATEGORIES = ["Garbage", "Water Leakage", "Electricity Issue", "Pothole"]
+def detect_category(image_path=None, user_selected_category=None, image_file=None):
+    """Classify an uploaded image path or file-like object.
 
-# Keywords that (if present in filename) nudge the fallback detector -
-# purely a demo convenience, not required for the algorithm to work.
-_FILENAME_HINTS = {
-    "garbage": "Garbage", "trash": "Garbage", "waste": "Garbage",
-    "water": "Water Leakage", "leak": "Water Leakage", "pipe": "Water Leakage",
-    "electric": "Electricity Issue", "wire": "Electricity Issue", "pole": "Electricity Issue",
-    "pothole": "Pothole", "road": "Pothole", "crack": "Pothole",
-}
-
-
-def detect_category(image_path, user_selected_category=None):
+    The citizen-selected category is deliberately *not* treated as an AI
+    prediction. It is returned separately as the manual category, so the UI
+    can show the model's independent result and let the citizen choose.
     """
-    Main entry point. Returns a dict:
-      {"category": <str>, "confidence": <float 0-1>, "priority": <Low/Medium/High>}
-    Uses the trained MobileNetV2 model first; falls back to the old heuristic.
-    """
-    result = None
-
-    # 1) Trained AI model (ai_model folder)
-    if _civic_predict is not None and image_path and os.path.exists(image_path):
-        try:
-            r = _civic_predict(image_path)
-            result = {"category": r["category"], "confidence": r["confidence"]}
-        except Exception as e:
-            print("AI model failed, using fallback:", e)
-
-    # 2) Old local heuristic (unchanged) if the model is missing or failed
-    if result is None:
-        try:
-            result = _local_fallback_detect(image_path)
-        except Exception:
-            # Never let AI detection break complaint submission.
-            result = {"category": user_selected_category or "Garbage", "confidence": 0.4}
-
-    result["priority"] = _calculate_base_priority(result["category"], result["confidence"])
-    return result
-
-def _local_fallback_detect(image_path):
-    """
-    Local, dependency-light heuristic detector.
-    Uses basic pixel statistics via Pillow if available; otherwise falls
-    back to a filename-hint / weighted-random guess so the app still works
-    even without image libraries installed.
-    """
-    filename = os.path.basename(image_path).lower() if image_path else ""
-
-    for hint, category in _FILENAME_HINTS.items():
-        if hint in filename:
-            return {"category": category, "confidence": round(random.uniform(0.75, 0.93), 2)}
-
+    temp_path = None
+    path = image_path
     try:
-        from PIL import Image
+        if image_file is not None:
+            stream = image_file.stream if hasattr(image_file, "stream") else image_file
+            stream.seek(0)
+            suffix = os.path.splitext(getattr(image_file, "filename", "upload.jpg"))[1] or ".jpg"
+            with tempfile.NamedTemporaryFile(prefix="scg-ai-", suffix=suffix, delete=False) as tmp:
+                tmp.write(stream.read())
+                temp_path = tmp.name
+            stream.seek(0)
+            path = temp_path
+        if not path or not os.path.isfile(path):
+            return _unavailable(user_selected_category, "The uploaded image could not be read by the analyser.")
+        if _civic_predict is None:
+            return _unavailable(user_selected_category, "The trained image model could not be loaded on the server.")
 
-        with Image.open(image_path) as img:
-            img = img.convert("RGB").resize((64, 64))
-            pixels = list(img.getdata())
-            n = len(pixels)
-            avg_r = sum(p[0] for p in pixels) / n
-            avg_g = sum(p[1] for p in pixels) / n
-            avg_b = sum(p[2] for p in pixels) / n
-            brightness = (avg_r + avg_g + avg_b) / 3
-
-        # Simple colour-based heuristic (demo-grade, not a trained model):
-        #  - Greyish/dark + low brightness  -> Pothole (asphalt)
-        #  - Blue-dominant                  -> Water Leakage
-        #  - Brown/mixed dull tones         -> Garbage
-        #  - Very bright / high contrast    -> Electricity Issue
-        if avg_b > avg_r and avg_b > avg_g:
-            category = "Water Leakage"
-            confidence = round(0.65 + (avg_b - max(avg_r, avg_g)) / 255, 2)
-        elif brightness < 90:
-            category = "Pothole"
-            confidence = round(0.6 + (90 - brightness) / 200, 2)
-        elif brightness > 180:
-            category = "Electricity Issue"
-            confidence = round(0.55 + (brightness - 180) / 200, 2)
-        else:
-            category = "Garbage"
-            confidence = round(0.55 + random.uniform(0, 0.15), 2)
-
-        confidence = max(0.4, min(confidence, 0.95))
-        return {"category": category, "confidence": confidence}
-
+        # Validate/decode once before model inference. Reject non-image files.
+        with Image.open(path) as image:
+            image.verify()
+        prediction = _civic_predict(path)
+        category = prediction.get("category")
+        confidence = float(prediction.get("confidence", 0.0))
+        if category not in CATEGORIES or not 0 <= confidence <= 1:
+            return _unavailable(user_selected_category, "The image model returned an invalid result.")
+        prediction["category"] = category
+        prediction["confidence"] = round(confidence, 4)
+        prediction["priority"] = prediction.get("priority") or _calculate_base_priority(category, confidence)
+        prediction["reliable"] = bool(prediction.get("reliable", confidence >= 0.65))
+        prediction["manual_category"] = user_selected_category if user_selected_category in CATEGORIES else None
+        prediction["analyzer_status"] = "ok"
+        prediction["message"] = (
+            "Image analysed successfully. Review the AI suggestion and confirm or change the category."
+            if prediction["reliable"] else
+            "The image is unclear to the model. Please verify the suggestion or choose the correct category manually."
+        )
+        return prediction
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        return _unavailable(user_selected_category, "The uploaded file is not a valid readable image.")
     except Exception:
-        # Pillow not installed or image unreadable — weighted random fallback
-        category = random.choice(CATEGORIES)
-        return {"category": category, "confidence": round(random.uniform(0.4, 0.6), 2)}
+        return _unavailable(user_selected_category, "Image analysis failed. Please select the category manually and try again.")
+    finally:
+        if temp_path:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+
+
+def _unavailable(manual_category, message):
+    return {
+        "category": None,
+        "confidence": 0.0,
+        "priority": _calculate_base_priority(manual_category, 0.0) if manual_category in CATEGORIES else "Medium",
+        "reliable": False,
+        "manual_category": manual_category if manual_category in CATEGORIES else None,
+        "analyzer_status": "unavailable",
+        "message": message,
+    }
 
 
 def _calculate_base_priority(category, confidence):
-    """A starting priority suggestion based purely on category + AI confidence.
-    Final priority may later be raised by the duplicate-detection service
-    when multiple citizens report the same issue."""
-    high_risk_categories = {"Electricity Issue", "Pothole"}
-    if category in high_risk_categories and confidence >= 0.7:
+    if category == "Electricity Issue":
         return "High"
-    if confidence >= 0.6:
+    if category == "Pothole" and confidence >= 0.65:
+        return "High"
+    if confidence >= 0.60:
         return "Medium"
     return "Low"

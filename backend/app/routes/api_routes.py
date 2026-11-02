@@ -522,7 +522,12 @@ def complaints_collection():
 
     # Resolve location
     manual_loc = data.get("manual_location", "").strip() or None
-    loc = location_service.resolve_location(latitude, longitude, location_name, manual_loc)
+    accuracy = data.get("location_accuracy")
+    loc_source = data.get("location_source")
+    loc = location_service.resolve_location(
+        latitude, longitude, location_name, manual_loc,
+        accuracy=accuracy, location_source=loc_source
+    )
 
     # AI Detection
     ai_result = ai_detection_service.detect_category(photo_full_path, user_selected_category=category)

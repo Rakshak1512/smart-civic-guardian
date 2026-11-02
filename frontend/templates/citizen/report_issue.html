@@ -1,13 +1,16 @@
 {% extends 'shared/base.html' %}
 {% block title %}Report an Issue - Smart Civic Guardian{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
 {% block content %}
 
 <div class="card-panel form-panel">
     <h1 class="page-title">Report a Civic Issue</h1>
 
     <div class="wizard-steps">
-                <div class="wizard-step active" data-step="1"><span>1</span>Issue Details</div>
+        <div class="wizard-step active" data-step="1"><span>1</span>Issue Details</div>
         <div class="wizard-step {{ 'active' if ai_result }}" data-step="2"><span>2</span>Location</div>
         <div class="wizard-step {{ 'active' if ai_result }}" data-step="3"><span>3</span>AI Analysis</div>
         <div class="wizard-step" data-step="4"><span>4</span>Review & Submit</div>
@@ -45,17 +48,27 @@
 
         <div class="wizard-panel" data-panel="2" style="display:none;">
             <div class="form-group location-group">
-                <label>Location <span class="required">*</span></label>
+                <label>Device Location <span class="required">*</span></label>
                 <div id="gpsStatus" class="gps-status">Attempting to detect your location...</div>
+                
                 <input type="hidden" id="latitude" name="latitude">
                 <input type="hidden" id="longitude" name="longitude">
                 <input type="hidden" id="location_name" name="location_name">
+                <input type="hidden" id="device_latitude" name="device_latitude">
+                <input type="hidden" id="device_longitude" name="device_longitude">
+                <input type="hidden" id="location_accuracy" name="location_accuracy">
+                <input type="hidden" id="location_source" name="location_source">
+
+                <div id="issueLocationMap" class="mini-map" style="display:none;margin:0.8rem 0;height:240px;"></div>
 
                 <div id="manualLocationBox" class="manual-location-box" style="display:none;">
-                    <label for="manual_location">GPS unavailable — enter your location manually</label>
-                    <input type="text" id="manual_location" name="manual_location" placeholder="e.g. MG Road, near City Hospital">
+                    <label for="manual_location">Add a nearby landmark or correct the detected place</label>
+                    <input type="text" id="manual_location" name="manual_location" placeholder="e.g. MG Road, near City Hospital, Gate 2">
                 </div>
-                <button type="button" id="retryGpsBtn" class="btn btn-outline btn-small">Retry GPS Detection</button>
+                <div style="display:flex;gap:0.6rem;align-items:center;margin-top:0.6rem;flex-wrap:wrap;">
+                    <button type="button" id="retryGpsBtn" class="btn btn-outline btn-small">Retry Location</button>
+                    <small id="gpsHint" class="hint-text" style="margin:0;"></small>
+                </div>
             </div>
             <div class="wizard-nav">
                 <button type="button" class="btn btn-outline wizard-back" data-back="1">← Back</button>
@@ -64,37 +77,57 @@
         </div>
     </form>
 
-        {% else %}
+    {% else %}
     <div class="wizard-panel" data-panel="3">
         <div class="ai-result-box">
-            <div class="ai-result-row"><span>Detected Category</span><strong>{{ ai_result.category }}</strong></div>
+            {% if ai_result.analyzer_status == 'ok' and ai_result.category %}
+            <div class="ai-result-row"><span>AI Detected Category</span><strong>{{ ai_result.category }}</strong></div>
             <div class="ai-result-row"><span>Suggested Priority</span><strong>{{ ai_result.priority }}</strong></div>
             <div class="ai-result-row"><span>AI Confidence</span><strong>{{ (ai_result.confidence * 100) | round | int }}%</strong></div>
+            {% else %}
+            <div class="ai-result-row"><strong>AI analysis unavailable</strong></div>
+            {% endif %}
+            <p>{{ ai_result.message or 'Choose the correct category manually before submitting.' }}</p>
+        </div>
+        <div class="form-group">
+            <label for="confirmedCategory">Confirm Issue Category <span class="required">*</span></label>
+            <select id="confirmedCategory" required>
+                <option value="Garbage" {% if ai_suggested_category == 'Garbage' %}selected{% endif %}>Garbage</option>
+                <option value="Water Leakage" {% if ai_suggested_category == 'Water Leakage' %}selected{% endif %}>Water Leakage</option>
+                <option value="Electricity Issue" {% if ai_suggested_category == 'Electricity Issue' %}selected{% endif %}>Electricity Issue</option>
+                <option value="Pothole" {% if ai_suggested_category == 'Pothole' %}selected{% endif %}>Pothole</option>
+            </select>
+            <small>You can accept the AI suggestion or manually select the correct category.</small>
         </div>
 
-        
-    <div class="wizard-nav">
-        <a href="{{ url_for('issue.report_issue') }}" class="btn btn-outline">← Start Over</a>
-           <button type="button" class="btn btn-primary wizard-next" data-next="4">Next: Review →</button>
+        <div class="wizard-nav">
+            <a href="{{ url_for('issue.report_issue') }}" class="btn btn-outline">← Start Over</a>
+            <button type="button" class="btn btn-primary wizard-next" data-next="4">Next: Review →</button>
         </div>
     </div>
 
     <div class="wizard-panel" data-panel="4" style="display:none;">
         <div class="review-box">
-            <div class="review-row"><span>Photo</span><img src="{{ url_for('static', filename=photo_path) }}" style="max-width:160px;border-radius:8px;"></div>
-            <div class="review-row"><span>Category</span><strong>{{ category }}</strong></div>
+            <div class="review-row"><span>Photo</span><img src="{{ url_for('get_signed_image', photo_path=photo_path) }}" style="max-width:160px;border-radius:8px;"></div>
+            <div class="review-row"><span>Category</span><strong class="review-category-value">{{ ai_suggested_category }}</strong></div>
             <div class="review-row"><span>Description</span><strong>{{ description }}</strong></div>
-            <div class="review-row"><span>Location</span><strong>{{ location_name }}</strong></div>
+            <div class="review-row"><span>Location</span><strong>{{ location_name }}{% if manual_location and manual_location not in location_name %} — {{ manual_location }}{% endif %}</strong></div>
             <div class="review-row"><span>Priority</span><strong>{{ ai_result.priority }}</strong></div>
         </div>
 
         <form method="POST" action="{{ url_for('issue.report_issue') }}" enctype="multipart/form-data">
-            <input type="hidden" name="category" value="{{ category }}">
+            <input type="hidden" name="category" id="confirmedCategoryHidden" value="{{ ai_suggested_category }}">
+            <input type="hidden" name="ai_detected_category" value="{{ ai_result.category or '' }}">
+            <input type="hidden" name="ai_confidence" value="{{ ai_result.confidence or 0 }}">
             <input type="hidden" name="description" value="{{ description }}">
             <input type="hidden" name="latitude" value="{{ latitude }}">
             <input type="hidden" name="longitude" value="{{ longitude }}">
             <input type="hidden" name="location_name" value="{{ location_name }}">
             <input type="hidden" name="manual_location" value="{{ manual_location }}">
+            <input type="hidden" name="device_latitude" value="{{ device_latitude or '' }}">
+            <input type="hidden" name="device_longitude" value="{{ device_longitude or '' }}">
+            <input type="hidden" name="location_accuracy" value="{{ location_accuracy or '' }}">
+            <input type="hidden" name="location_source" value="{{ location_source or '' }}">
             <input type="hidden" name="analyzed_photo" value="{{ photo_filename }}">
             <div class="wizard-nav">
                 <button type="button" class="btn btn-outline wizard-back" data-back="3">← Back</button>
@@ -106,4 +139,7 @@
 </div>
 
 {% endblock %}
-{% block extra_js %}<script src="{{ url_for('static', filename='js/report_issue.js') }}"></script>{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="{{ url_for('static', filename='js/report_issue.js') }}"></script>
+{% endblock %}

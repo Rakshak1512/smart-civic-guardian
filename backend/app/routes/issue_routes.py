@@ -30,6 +30,10 @@ def analyze_photo():
     longitude = request.form.get("longitude", "").strip()
     location_name = request.form.get("location_name", "").strip()
     manual_location = request.form.get("manual_location", "").strip()
+    device_latitude = request.form.get("device_latitude", "").strip()
+    device_longitude = request.form.get("device_longitude", "").strip()
+    location_accuracy = request.form.get("location_accuracy", "").strip()
+    location_source = request.form.get("location_source", "").strip()
     photo = request.files.get("photo")
 
     errors = []
@@ -45,25 +49,37 @@ def analyze_photo():
             flash(e, "error")
         return render_template("citizen/report_issue.html", form=request.form)
 
+    # Analyse the incoming bytes before storage consumes the upload stream.
     try:
+        photo.stream.seek(0)
+        ai_result = ai_detection_service.detect_category(user_selected_category=category, image_file=photo)
+    except Exception:
+        ai_result = ai_detection_service.detect_category(user_selected_category=category)
+
+    try:
+        photo.stream.seek(0)
         photo_key = storage_service.save_photo(photo, folder_type="issue_photos")
     except ValueError as e:
         flash(str(e), "error")
         return render_template("citizen/report_issue.html", form=request.form)
 
     photo_path = photo_key
-    loc = location_service.resolve_location(latitude, longitude, location_name, manual_location)
-
-    # Temporary local path for AI analyzer if saved locally, or fallback safely
-    photo_local = os.path.join(current_app.config["UPLOAD_FOLDER_ISSUES"], os.path.basename(photo_key)) if os.path.exists(os.path.join(current_app.config["UPLOAD_FOLDER_ISSUES"], os.path.basename(photo_key))) else None
-    ai_result = ai_detection_service.detect_category(photo_local, user_selected_category=category)
+    loc = location_service.resolve_location(
+        latitude, longitude, location_name, manual_location,
+        accuracy=location_accuracy, location_source=location_source,
+        device_lat=device_latitude, device_lon=device_longitude
+    )
+    # Use the AI suggestion for duplicate lookup only when reliable; otherwise
+    # retain the citizen's selected/manual category.
+    detected_category = ai_result.get("category") if ai_result.get("reliable") else category
     duplicate = duplicate_detection_service.find_duplicate(
-        category, loc["latitude"], loc["longitude"], loc["location_name"]
+        detected_category, loc["latitude"], loc["longitude"], loc["location_name"]
     )
 
     return render_template(
         "citizen/report_issue.html",
         ai_result=ai_result,
+        ai_suggested_category=(ai_result.get("category") if ai_result.get("reliable") else category),
         duplicate=duplicate,
         photo_filename=photo_key,
         photo_path=photo_path,
@@ -73,6 +89,10 @@ def analyze_photo():
         longitude=loc["longitude"],
         location_name=loc["location_name"],
         manual_location=manual_location,
+        device_latitude=device_latitude,
+        device_longitude=device_longitude,
+        location_accuracy=location_accuracy,
+        location_source=location_source,
     )
 
 
@@ -88,7 +108,13 @@ def report_issue():
     longitude = request.form.get("longitude", "").strip()
     location_name = request.form.get("location_name", "").strip()
     manual_location = request.form.get("manual_location", "").strip()
+    device_latitude = request.form.get("device_latitude", "").strip()
+    device_longitude = request.form.get("device_longitude", "").strip()
+    location_accuracy = request.form.get("location_accuracy", "").strip()
+    location_source = request.form.get("location_source", "").strip()
     analyzed_photo = request.form.get("analyzed_photo", "").strip()
+    submitted_ai_category = request.form.get("ai_detected_category", "").strip()
+    submitted_ai_confidence = request.form.get("ai_confidence", "0").strip()
     photo = request.files.get("photo")
 
     errors = []
@@ -96,6 +122,8 @@ def report_issue():
         errors.append("Please select a valid category.")
     if len(description) < 10:
         errors.append("Please provide a description of at least 10 characters.")
+    if not location_service.is_valid_coordinate(latitude, longitude) and not manual_location.strip():
+        errors.append("Please capture device GPS location or enter a precise location/landmark.")
     if not analyzed_photo and (not photo or photo.filename == ""):
         errors.append("Please upload and analyze a photo of the issue.")
 
@@ -105,6 +133,9 @@ def report_issue():
         return render_template("citizen/report_issue.html", form=request.form)
 
     if analyzed_photo:
+        # Never trust an arbitrary client-supplied storage path. It must be the
+        # opaque key created during the previous authenticated analysis step.
+        # The analysis flow already stores the image and passes the key back.
         photo_key = analyzed_photo
     else:
         try:
@@ -116,16 +147,37 @@ def report_issue():
     photo_path = photo_key
 
     # Resolve GPS / location
-    loc = location_service.resolve_location(latitude, longitude, location_name, manual_location)
-
-    photo_local = os.path.join(current_app.config["UPLOAD_FOLDER_ISSUES"], os.path.basename(photo_key)) if photo_key and os.path.exists(os.path.join(current_app.config["UPLOAD_FOLDER_ISSUES"], os.path.basename(photo_key))) else None
-    ai_result = ai_detection_service.detect_category(photo_local, user_selected_category=category)
-
-    duplicate = duplicate_detection_service.find_duplicate(
-        category, loc["latitude"], loc["longitude"], loc["location_name"]
+    loc = location_service.resolve_location(
+        latitude, longitude, location_name, manual_location,
+        accuracy=location_accuracy, location_source=location_source,
+        device_lat=device_latitude, device_lon=device_longitude
     )
 
-    priority = ai_result["priority"]
+    # Keep the independently analysed result from the review step. If a citizen
+    # submitted without the analysis step, preserve their manual category.
+    try:
+        confidence = max(0.0, min(1.0, float(submitted_ai_confidence)))
+    except (TypeError, ValueError):
+        confidence = 0.0
+    if submitted_ai_category in ("Garbage", "Water Leakage", "Electricity Issue", "Pothole") and confidence > 0:
+        ai_result = {
+            "category": submitted_ai_category,
+            "confidence": confidence,
+            "priority": ai_detection_service._calculate_base_priority(submitted_ai_category, confidence),
+            "reliable": confidence >= 0.65,
+        }
+    else:
+        ai_result = {
+            "category": None, "confidence": 0.0,
+            "priority": ai_detection_service._calculate_base_priority(category, 0.0),
+            "reliable": False,
+        }
+    detected_category = ai_result.get("category") if ai_result.get("reliable") else category
+    duplicate = duplicate_detection_service.find_duplicate(
+        detected_category, loc["latitude"], loc["longitude"], loc["location_name"]
+    )
+
+    priority = ai_result.get("priority", "Medium")
     duplicate_of = None
     duplicate_group = None
 
@@ -139,8 +191,8 @@ def report_issue():
     complaint_id = issue_model.create_complaint({
         "user_id": session["user_id"],
         "category": category,
-        "ai_detected_category": ai_result["category"],
-        "ai_confidence": ai_result["confidence"],
+        "ai_detected_category": ai_result.get("category") or category,
+        "ai_confidence": ai_result.get("confidence", 0.0),
         "description": description,
         "photo_path": photo_path,
         "latitude": loc["latitude"],
