@@ -1,4 +1,3 @@
-numpy
-pillow
-# only needed if you re-train with train.py:
-scikit-learn
+numpy>=1.26.0
+Pillow>=10.0.0
+scikit-learn>=1.3.0
