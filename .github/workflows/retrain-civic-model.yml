@@ -29,7 +29,7 @@ jobs:
       - name: Check out accuracy-improvement branch
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.ref_name }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -80,5 +80,5 @@ jobs:
             echo "No model artifact changes to commit."
           else
             git commit -m "Retrain civic classifier with leakage-resistant validation"
-            git push origin "HEAD:\${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
