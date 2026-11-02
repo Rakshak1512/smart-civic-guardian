@@ -1,0 +1,37 @@
+name: Package latest repository snapshot
+
+on:
+  push:
+    branches:
+      - fix/model-accuracy-improvements
+    paths:
+      - ".github/workflows/package-source.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact commit
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Create source ZIP
+        run: |
+          SHORT_SHA="$(git rev-parse --short=8 HEAD)"
+          ZIP_NAME="Smart-Civic-Guardian-latest-\${SHORT_SHA}.zip"
+          git archive --format=zip --output="\${ZIP_NAME}" HEAD
+          echo "ZIP_NAME=\${ZIP_NAME}" >> "$GITHUB_ENV"
+          unzip -t "\${ZIP_NAME}"
+
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Civic-Guardian-latest-source
+          path: \${{ env.ZIP_NAME }}
+          if-no-files-found: error
+          retention-days: 1
