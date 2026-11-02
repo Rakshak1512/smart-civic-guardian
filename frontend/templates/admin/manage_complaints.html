@@ -51,7 +51,14 @@
                 <td>{{ c.category }}</td>
                 <td><span class="badge badge-priority-{{ c.priority|lower }}">{{ c.priority }}</span></td>
                 <td><span class="badge badge-status-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span></td>
-                <td>{{ c.location_name or 'N/A' }}</td>
+                <td>
+                    {{ c.location_name or 'GPS location' if c.latitude is not none and c.longitude is not none else c.location_name or 'N/A' }}
+                    {% if c.latitude is not none and c.longitude is not none %}
+                    <br><a href="https://www.google.com/maps/search/?api=1&amp;query={{ c.latitude }},{{ c.longitude }}"
+                           target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-small"
+                           aria-label="Open complaint {{ c.id }} location in Google Maps">View on Google Maps ↗</a>
+                    {% endif %}
+                </td>
                 <td>{{ c.created_at|ist }}</td>
                 <td><a href="{{ url_for('admin.complaint_detail', complaint_id=c.id) }}" class="btn btn-outline btn-small">Manage</a></td>
             </tr>

@@ -34,14 +34,18 @@
                {% if complaint.ai_confidence %} ({{ (complaint.ai_confidence * 100)|round|int }}% confidence){% endif %}</p>
             <p><strong>Priority:</strong> <span class="badge badge-priority-{{ complaint.priority|lower }}">{{ complaint.priority }}</span></p>
             <p><strong>Description:</strong> {{ complaint.description }}</p>
-            <p><strong>Location:</strong> {{ complaint.location_name or 'N/A' }}
-               {% if complaint.latitude and complaint.longitude %} ({{ complaint.latitude }}, {{ complaint.longitude }}){% endif %}</p>
+            <p><strong>Location:</strong> {{ complaint.location_name or ('GPS location' if complaint.latitude is not none and complaint.longitude is not none else 'N/A') }}
+               {% if complaint.latitude is not none and complaint.longitude is not none %}
+               ({{ complaint.latitude }}, {{ complaint.longitude }})
+               <br><a href="https://www.google.com/maps/search/?api=1&amp;query={{ complaint.latitude }},{{ complaint.longitude }}"
+                      target="_blank" rel="noopener noreferrer">View this reported location on Google Maps ↗</a>
+               {% endif %}</p>
             <p><strong>Reported On:</strong> {{ complaint.created_at|ist }}</p>
             <p><strong>Support Count:</strong> {{ complaint.support_count }}{% if complaint.support_count and complaint.support_count > 1 %} citizen reports linked to this issue{% endif %}</p>
         </div>
     </div>
 
-    {% if complaint.latitude and complaint.longitude %}
+    {% if complaint.latitude is not none and complaint.longitude is not none %}
     <div id="miniMap" class="mini-map"></div>
     {% endif %}
 
