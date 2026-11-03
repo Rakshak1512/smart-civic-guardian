@@ -1,39 +1,104 @@
 {
   "photos_per_class": {
-    "Garbage": 86,
-    "Pothole": 26,
-    "Water_Leakage": 20,
-    "Electricity_Issue": 20
+    "Garbage": 132,
+    "Pothole": 10,
+    "Water_Leakage": 11,
+    "Electricity_Issue": 11
   },
-  "training_views": 3748,
-  "C": 0.3,
-  "heldout_accuracy": 0.9539473684210527,
-  "macro_f1": 0.9263222409774134,
+  "total_original_photos": 164,
+  "unique_duplicate_groups": 164,
+  "duplicate_or_near_duplicate_links": 0,
+  "training_views": 1968,
+  "validation_method": "StratifiedGroupKFold with exact and perceptual near-duplicate grouping",
+  "validation_folds": 5,
+  "group_count_per_class": {
+    "Garbage": 132,
+    "Pothole": 10,
+    "Water_Leakage": 11,
+    "Electricity_Issue": 11
+  },
+  "cross_image_synthetic_augmentation": false,
+  "selected_C": 0.3,
+  "heldout_accuracy": 0.9817,
+  "macro_f1": 0.9493,
+  "per_class_metrics": {
+    "Garbage": {
+      "precision": 0.9851,
+      "recall": 1.0,
+      "f1": 0.9925,
+      "support": 132
+    },
+    "Pothole": {
+      "precision": 0.9091,
+      "recall": 1.0,
+      "f1": 0.9524,
+      "support": 10
+    },
+    "Water Leakage": {
+      "precision": 1.0,
+      "recall": 0.8182,
+      "f1": 0.9,
+      "support": 11
+    },
+    "Electricity Issue": {
+      "precision": 1.0,
+      "recall": 0.9091,
+      "f1": 0.9524,
+      "support": 11
+    }
+  },
   "confusion_matrix": [
     [
-      86,
+      132,
       0,
       0,
       0
     ],
     [
       0,
-      25,
-      1,
+      10,
+      0,
       0
     ],
     [
       1,
-      4,
-      15,
+      1,
+      9,
       0
     ],
     [
       1,
       0,
       0,
-      19
+      10
     ]
+  ],
+  "fold_metrics": [
+    {
+      "fold": 1,
+      "validation_photos": 33,
+      "accuracy": 0.9697
+    },
+    {
+      "fold": 2,
+      "validation_photos": 33,
+      "accuracy": 0.9697
+    },
+    {
+      "fold": 3,
+      "validation_photos": 33,
+      "accuracy": 0.9697
+    },
+    {
+      "fold": 4,
+      "validation_photos": 33,
+      "accuracy": 1.0
+    },
+    {
+      "fold": 5,
+      "validation_photos": 32,
+      "accuracy": 1.0
+    }
   ],
   "class_order": [
     "Garbage",
@@ -42,47 +107,24 @@
     "Electricity Issue"
   ],
   "mistakes": [
-    [
-      "new_pothole_13.jpg",
-      "Pothole",
-      "Water_Leakage",
-      0.5044333934783936
-    ],
-    [
-      "new_water_leakage_05.jpg",
-      "Water_Leakage",
-      "Pothole",
-      0.6356117129325867
-    ],
-    [
-      "new_water_leakage_07.jpg",
-      "Water_Leakage",
-      "Pothole",
-      0.6371484994888306
-    ],
-    [
-      "new_water_leakage_08.jpg",
-      "Water_Leakage",
-      "Pothole",
-      0.5599563717842102
-    ],
-    [
-      "water_leakage_02.jpg",
-      "Water_Leakage",
-      "Garbage",
-      0.43638479709625244
-    ],
-    [
-      "water_leakage_09.jpg",
-      "Water_Leakage",
-      "Pothole",
-      0.3414100706577301
-    ],
-    [
-      "electricity_issue_11.jpg",
-      "Electricity_Issue",
-      "Garbage",
-      0.4595511555671692
-    ]
-  ]
+    {
+      "file": "Water_Leakage/water_leakage_02.jpg",
+      "actual": "Water Leakage",
+      "predicted": "Garbage",
+      "predicted_probability": 0.4024
+    },
+    {
+      "file": "Water_Leakage/water_leakage_09.jpg",
+      "actual": "Water Leakage",
+      "predicted": "Pothole",
+      "predicted_probability": 0.321
+    },
+    {
+      "file": "Electricity_Issue/electricity_issue_11.jpg",
+      "actual": "Electricity Issue",
+      "predicted": "Garbage",
+      "predicted_probability": 0.5543
+    }
+  ],
+  "evaluation_note": "Grouped cross-validation on the checked-in training dataset. Use evaluate.py with a separate unseen real-world test set for an independent final accuracy measurement."
 }

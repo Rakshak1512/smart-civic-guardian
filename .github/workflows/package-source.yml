@@ -1,0 +1,30 @@
+name: Package latest repository snapshot
+
+on:
+  push:
+    branches:
+      - fix/model-accuracy-improvements
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out triggering commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create and verify ZIP
+        run: git archive --format=zip --output=Smart-Civic-Guardian-latest.zip HEAD && unzip -t Smart-Civic-Guardian-latest.zip
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Civic-Guardian-latest-source
+          path: Smart-Civic-Guardian-latest.zip
+          if-no-files-found: error
+          retention-days: 1

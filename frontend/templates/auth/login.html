@@ -166,6 +166,7 @@
             {% endwith %}
 
             <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm" novalidate>
+                <input type="hidden" name="after_logout" value="{{ '1' if after_logout else '0' }}">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" required placeholder="you@example.com"
@@ -343,18 +344,33 @@ function copyDemo(button, email, password) {
         }, 2000);
     }
 }
+const LOGIN_AFTER_LOGOUT = {{ 'true' if after_logout else 'false' }};
+
 function handleLoginBack() {
+    const landingPageUrl = "{{ url_for('auth.home') }}";
+
+    // Never send a logged-out user back to a dashboard or protected page.
+    if (LOGIN_AFTER_LOGOUT) {
+        window.location.replace(landingPageUrl);
+        return;
+    }
+
     const referrer = document.referrer;
     if (referrer && window.history.length > 1) {
         try {
             const refUrl = new URL(referrer);
-            if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('/login') && !refUrl.pathname.includes('/logout')) {
+            const isSameSite = refUrl.origin === window.location.origin;
+            const isAuthRoute = /\/(login|logout|dashboard)(\/|$)/i.test(refUrl.pathname);
+            if (isSameSite && !isAuthRoute) {
                 window.history.back();
                 return;
             }
-        } catch (e) {}
+        } catch (error) {
+            // Fall through to the public landing page for an invalid referrer.
+        }
     }
-    window.location.href = "{{ url_for('auth.home') }}";
+
+    window.location.replace(landingPageUrl);
 }
 </script>
 

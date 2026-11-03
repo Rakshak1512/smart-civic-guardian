@@ -1,0 +1,84 @@
+name: Retrain civic image classifier
+
+on:
+  push:
+    branches:
+      - fix/model-accuracy-improvements
+    paths:
+      - "backend/ai_model/train.py"
+      - "backend/ai_model/requirements.txt"
+      - "backend/ai_model/dataset/**"
+      - ".github/workflows/retrain-civic-model.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: civic-model-retraining
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+    steps:
+      - name: Check out accuracy-improvement branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/ai_model/requirements.txt
+
+      - name: Install training dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r backend/ai_model/requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m py_compile backend/ai_model/train.py backend/ai_model/evaluate.py backend/ai_model/predict.py backend/ai_model/backbone.py
+
+      - name: Retrain with grouped validation
+        run: python backend/ai_model/train.py
+
+      - name: Verify generated model artifacts
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from pathlib import Path
+          model = Path("backend/ai_model/model")
+          with np.load(model / "civic_classifier.npz", allow_pickle=False) as weights:
+              assert weights["coef"].shape[0] == 4
+              assert weights["intercept"].shape == (4,)
+          labels = json.loads((model / "labels.json").read_text())
+          report = json.loads((model / "training_report.json").read_text())
+          assert len(labels["classes"]) == 4
+          assert report["total_original_photos"] > 0
+          assert 0 <= report["heldout_accuracy"] <= 1
+          assert 0 <= report["macro_f1"] <= 1
+          assert len(report["per_class_metrics"]) == 4
+          print("Model artifacts verified.")
+          print("Grouped CV accuracy:", report["heldout_accuracy"])
+          print("Grouped CV macro-F1:", report["macro_f1"])
+          print("Per-class:", report["per_class_metrics"])
+          PY
+
+      - name: Commit refreshed model and evaluation report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/ai_model/model/civic_classifier.npz backend/ai_model/model/labels.json backend/ai_model/model/training_report.json
+          if git diff --cached --quiet; then
+            echo "No model artifact changes to commit."
+          else
+            git commit -m "Retrain civic classifier with leakage-resistant validation"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

@@ -1,1 +1,8 @@
-{"classes": ["Garbage", "Pothole", "Water Leakage", "Electricity Issue"]}
+{
+  "classes": [
+    "Garbage",
+    "Pothole",
+    "Water Leakage",
+    "Electricity Issue"
+  ]
+}
