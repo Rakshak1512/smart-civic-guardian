@@ -6,6 +6,7 @@ on:
       - fix/model-accuracy-improvements
     paths:
       - ".github/workflows/package-source.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,24 +15,18 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out exact commit
+      - name: Check out triggering commit
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
           fetch-depth: 1
 
-      - name: Create source ZIP
-        run: |
-          SHORT_SHA="$(git rev-parse --short=8 HEAD)"
-          ZIP_NAME="Smart-Civic-Guardian-latest-\${SHORT_SHA}.zip"
-          git archive --format=zip --output="\${ZIP_NAME}" HEAD
-          echo "ZIP_NAME=\${ZIP_NAME}" >> "$GITHUB_ENV"
-          unzip -t "\${ZIP_NAME}"
+      - name: Create and verify ZIP
+        run: git archive --format=zip --output=Smart-Civic-Guardian-latest.zip HEAD && unzip -t Smart-Civic-Guardian-latest.zip
 
-      - name: Upload source ZIP
+      - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: Smart-Civic-Guardian-latest-source
-          path: \${{ env.ZIP_NAME }}
+          path: Smart-Civic-Guardian-latest.zip
           if-no-files-found: error
           retention-days: 1
