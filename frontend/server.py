@@ -103,7 +103,7 @@ backend_opener = urllib.request.build_opener(NoRedirectHandler)
 
 def build_backend_url(endpoint):
     """Build a backend URL after removing accidental surrounding whitespace."""
-    clean_endpoint = str(endpoint or '').strip().lstrip('/')
+    clean_endpoint = str(endpoint or '').strip().lstrip('/').strip().lstrip('/')
     if any(ord(char) < 32 or ord(char) == 127 for char in clean_endpoint):
         raise ValueError('Backend endpoint contains a newline or control character.')
     return BACKEND_URL + '/' + clean_endpoint
