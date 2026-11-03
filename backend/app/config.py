@@ -23,8 +23,8 @@ class Config:
     # Host & Port
     HOST = os.environ.get("HOST", "0.0.0.0" if IS_PRODUCTION else "127.0.0.1")
     PORT = int(os.environ.get("PORT", 5000))
-    BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000").rstrip("/")
-    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+    BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000").strip().rstrip("/")
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").strip().rstrip("/")
 
     # Allowed CORS Origins
     raw_origins = os.environ.get("CORS_ORIGINS", "")
