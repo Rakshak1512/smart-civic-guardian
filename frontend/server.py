@@ -26,9 +26,19 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 ENVIRONMENT = os.environ.get("FLASK_ENV", "development")
 IS_PRODUCTION = ENVIRONMENT.lower() in ("production", "prod")
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000").rstrip("/")
-HOST = os.environ.get("HOST", "127.0.0.1")
+def normalise_service_url(variable_name, default):
+    """Trim pasted whitespace and validate a single-line HTTP(S) service URL."""
+    value = str(os.environ.get(variable_name, default) or default).strip().rstrip('/')
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise RuntimeError(variable_name + ' contains a newline or control character. Set it to a single-line URL in Render.')
+    parsed = urlparse(value)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        raise RuntimeError(variable_name + ' must be a complete http(s) URL.')
+    return value
+
+FRONTEND_URL = normalise_service_url("FRONTEND_URL", "http://localhost:3000")
+BACKEND_URL = normalise_service_url("BACKEND_URL", "http://localhost:5000")
+HOST = os.environ.get("HOST", "127.0.0.1").strip()
 PORT = int(os.environ.get("PORT", 3000))
 SECRET_KEY = os.environ.get("SECRET_KEY", "smart-civic-guardian-secret-key-2026")
 
@@ -91,9 +101,17 @@ class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 backend_opener = urllib.request.build_opener(NoRedirectHandler)
 
 
+def build_backend_url(endpoint):
+    """Build a backend URL after removing accidental surrounding whitespace."""
+    clean_endpoint = str(endpoint or '').strip().lstrip('/')
+    if any(ord(char) < 32 or ord(char) == 127 for char in clean_endpoint):
+        raise ValueError('Backend endpoint contains a newline or control character.')
+    return BACKEND_URL + '/' + clean_endpoint
+
+
 def call_backend(endpoint, method="GET", data=None, headers=None):
     """Helper function to talk to separate Backend REST API."""
-    url = f"{BACKEND_URL}/{endpoint.lstrip('/')}"
+    url = build_backend_url(endpoint)
     req_headers = headers or {}
     data_bytes = None
 
@@ -120,7 +138,7 @@ def call_backend(endpoint, method="GET", data=None, headers=None):
 
 def forward_request_to_backend(path):
     """Forwards incoming browser multipart/form-data or requests directly to Backend."""
-    target_url = f"{BACKEND_URL}/{path.lstrip('/')}"
+    target_url = build_backend_url(path)
     if request.query_string:
         target_url += f"?{request.query_string.decode('utf-8')}"
 
