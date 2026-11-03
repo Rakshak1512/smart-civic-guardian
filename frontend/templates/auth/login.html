@@ -166,6 +166,7 @@
             {% endwith %}
 
             <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm" novalidate>
+                <input type="hidden" name="after_logout" value="{{ '1' if after_logout else '0' }}">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" required placeholder="you@example.com"
@@ -345,6 +346,16 @@ function copyDemo(button, email, password) {
 }
 function handleLoginBack() {
     window.location.replace("{{ url_for('auth.public_home') }}");
+}
+
+// A browser Back action immediately after logout must go to the public landing page,
+// never restore the dashboard/report page that was open before logout.
+const LOGIN_AFTER_LOGOUT = {{ 'true' if after_logout else 'false' }};
+if (LOGIN_AFTER_LOGOUT) {
+    window.history.pushState({ loggedOutLoginGuard: true }, "", window.location.href);
+    window.addEventListener("popstate", function () {
+        window.location.replace("{{ url_for('auth.public_home') }}");
+    }, { once: true });
 }
 </script>
 

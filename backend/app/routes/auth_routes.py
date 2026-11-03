@@ -402,7 +402,8 @@ def resend_otp():
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        return render_template("auth/login.html")
+        after_logout = request.args.get("after_logout") == "1"
+        return render_template("auth/login.html", after_logout=after_logout)
 
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
@@ -412,7 +413,12 @@ def login():
 
     if not user_row or not user_model.verify_password(user_row, password):
         flash("Invalid email or password.", "error")
-        return render_template("auth/login.html", form=request.form)
+        after_logout = request.form.get("after_logout") == "1"
+        return render_template(
+            "auth/login.html",
+            form=request.form,
+            after_logout=after_logout,
+        )
 
     if user_row["role"] == "authority":
         valid_departments = ("Garbage", "Water Leakage", "Electricity Issue", "Pothole")
@@ -460,9 +466,15 @@ def admin_login():
 
 @auth_bp.route("/logout")
 def logout():
+    # Clear authentication and all temporary auth state before returning to login.
     session.clear()
     flash("You have been logged out successfully.", "success")
-    return redirect(url_for("auth.login"))
+    # Mark the login page so the browser Back button cannot restore the old dashboard.
+    response = redirect(url_for("auth.login", after_logout="1"), code=303)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 # ---------------------------------------------------------------------------
