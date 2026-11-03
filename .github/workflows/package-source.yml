@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - fix/model-accuracy-improvements
-    paths:
-      - ".github/workflows/package-source.yml"
   workflow_dispatch:
 
 permissions:
