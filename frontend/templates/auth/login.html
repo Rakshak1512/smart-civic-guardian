@@ -134,10 +134,10 @@
     <div class="split-auth-form">
         <div class="auth-card" style="max-width: 580px;">
             <div style="margin-bottom: 18px; display: flex; align-items: center;">
-                <button type="button" class="btn-back" id="loginBackBtn" onclick="handleLoginBack()" style="display: inline-flex; align-items: center; gap: 7px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none;">
+                <a href="{{ url_for('auth.home') }}" class="btn-back" id="loginBackBtn" style="display: inline-flex; align-items: center; gap: 7px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     <span>Back</span>
-                </button>
+                </a>
             </div>
             <h2>Login</h2>
             <div class="role-toggle">
@@ -344,16 +344,6 @@ function copyDemo(button, email, password) {
     }
 }
 function handleLoginBack() {
-    const referrer = document.referrer;
-    if (referrer && window.history.length > 1) {
-        try {
-            const refUrl = new URL(referrer);
-            if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('/login') && !refUrl.pathname.includes('/logout')) {
-                window.history.back();
-                return;
-            }
-        } catch (e) {}
-    }
     window.location.href = "{{ url_for('auth.home') }}";
 }
 </script>
