@@ -215,6 +215,11 @@ def home():
     return forward_request_to_backend("home")
 
 
+@auth_bp.route("/public-home")
+def public_home():
+    return forward_request_to_backend("public-home")
+
+
 @auth_bp.route("/about")
 def about():
     return forward_request_to_backend("about")

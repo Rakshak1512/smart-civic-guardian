@@ -10,7 +10,7 @@ import re
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import (
-    Blueprint, render_template, request, redirect, url_for,
+    Blueprint, make_response, render_template, request, redirect, url_for,
     session, flash, jsonify
 )
 
@@ -74,6 +74,36 @@ def home():
     if "user_id" in session:
         return redirect(url_for("auth.dashboard_redirect"))
     return render_template("home.html")
+
+
+@auth_bp.route("/public-home")
+def public_home():
+    """Render the public landing page and discard any leftover auth session."""
+    session.clear()
+    response = make_response(render_template("home.html"))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+@auth_bp.after_app_request
+def prevent_authenticated_pages_from_being_cached(response):
+    """Prevent browsers from restoring protected pages after logout."""
+    if request.path.startswith("/static/"):
+        return response
+
+    if session.get("user_id") or request.endpoint in {
+        "auth.login",
+        "auth.logout",
+        "auth.forgot_password",
+        "auth.public_home",
+    }:
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+    return response
 
 
 @auth_bp.route("/about")

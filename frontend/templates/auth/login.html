@@ -134,7 +134,7 @@
     <div class="split-auth-form">
         <div class="auth-card" style="max-width: 580px;">
             <div style="margin-bottom: 18px; display: flex; align-items: center;">
-                <a href="{{ url_for('auth.home') }}" class="btn-back" id="loginBackBtn" style="display: inline-flex; align-items: center; gap: 7px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none;">
+                <a href="{{ url_for('auth.public_home') }}" class="btn-back" id="loginBackBtn" style="display: inline-flex; align-items: center; gap: 7px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     <span>Back</span>
                 </a>
@@ -344,7 +344,7 @@ function copyDemo(button, email, password) {
     }
 }
 function handleLoginBack() {
-    window.location.href = "{{ url_for('auth.home') }}";
+    window.location.replace("{{ url_for('auth.public_home') }}");
 }
 </script>
 
